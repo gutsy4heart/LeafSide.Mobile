@@ -1,3 +1,4 @@
+import React from 'react';
 import { Feather } from '@expo/vector-icons';
 import { NavigationContainer, Theme as NavigationTheme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -24,7 +25,7 @@ const TabNavigator = () => {
 
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
+      screenOptions={({ route }: { route: { name: string } }) => ({
         headerShown: false,
         tabBarStyle: {
           backgroundColor: theme.colors.card,
@@ -34,7 +35,7 @@ const TabNavigator = () => {
         },
         tabBarActiveTintColor: theme.colors.accent,
         tabBarInactiveTintColor: theme.colors.textMuted,
-        tabBarIcon: ({ color, size }) => {
+        tabBarIcon: ({ color, size }: { color: string; size: number }) => {
           const iconMap: Record<string, React.ComponentProps<typeof Feather>['name']> = {
             Home: 'home',
             Catalog: 'book',
@@ -65,6 +66,24 @@ export const AppNavigator = () => {
       text: theme.colors.textPrimary,
       border: theme.colors.border,
       notification: theme.colors.accent,
+    },
+    fonts: {
+      regular: {
+        fontFamily: 'System',
+        fontWeight: '400',
+      },
+      medium: {
+        fontFamily: 'System',
+        fontWeight: '500',
+      },
+      bold: {
+        fontFamily: 'System',
+        fontWeight: '700',
+      },
+      heavy: {
+        fontFamily: 'System',
+        fontWeight: '900',
+      },
     },
   };
 
