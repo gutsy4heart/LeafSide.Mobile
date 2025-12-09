@@ -17,10 +17,10 @@ export const CartScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { cart, updateQuantity, removeItem, clear, isSyncing } = useCart();
 
-  const total = cart.items.reduce(
-    (acc, item) => acc + (item.book?.price ?? item.priceSnapshot ?? 0) * item.quantity,
-    0,
-  );
+  const total = cart.items.reduce((acc, item) => {
+    const price = item.book?.price ?? item.priceSnapshot ?? null;
+    return acc + (price ?? 0) * item.quantity;
+  }, 0);
 
   const handleCheckout = () => {
     if (!token) {

@@ -1,6 +1,7 @@
 import { Feather } from '@expo/vector-icons';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { BookImage } from '@/components/BookImage';
 import { useTheme } from '@/theme';
 import type { CartItem } from '@/types/cart';
 import { formatCurrency } from '@/utils/format';
@@ -18,13 +19,7 @@ export const CartItemRow = ({ item, onIncrement, onDecrement, onRemove }: CartIt
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.cardAlt, borderColor: theme.colors.border }]}>
-      {book?.imageUrl ? (
-        <Image source={{ uri: book.imageUrl }} style={styles.thumbnail} />
-      ) : (
-        <View style={[styles.thumbnail, styles.thumbPlaceholder]}>
-          <Feather name="image" size={20} color={theme.colors.textMuted} />
-        </View>
-      )}
+      <BookImage imageUrl={book?.imageUrl} width={70} height={90} borderRadius={12} />
       <View style={styles.content}>
         <Text style={[styles.title, { color: theme.colors.textPrimary }]} numberOfLines={1}>
           {book?.title ?? 'Книга'}
@@ -33,7 +28,7 @@ export const CartItemRow = ({ item, onIncrement, onDecrement, onRemove }: CartIt
           {book?.author ?? 'Автор неизвестен'}
         </Text>
         <Text style={[styles.price, { color: theme.colors.accent }]}>
-          {formatCurrency(book?.price ?? item.priceSnapshot ?? 0)}
+          {formatCurrency(book?.price ?? item.priceSnapshot ?? null)}
         </Text>
         <View style={styles.actions}>
           <View style={styles.quantity}>
@@ -61,17 +56,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 12,
     gap: 12,
-  },
-  thumbnail: {
-    width: 70,
-    height: 90,
-    borderRadius: 12,
-  },
-  thumbPlaceholder: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
   },
   content: {
     flex: 1,

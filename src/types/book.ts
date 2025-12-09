@@ -1,19 +1,19 @@
 export interface Book {
-  id: string;
+  id: string; // Guid from backend
   title: string;
   description: string;
   author: string;
   genre: string;
-  publishing?: string;
-  created?: number;
-  imageUrl?: string;
-  price: number;
-  isbn?: string;
-  language?: string;
-  pageCount?: number;
+  publishing: string; // Required in backend
+  created: string; // Year as string in backend, not number
+  imageUrl: string; // Can be empty string
+  price: number | null; // Can be null in backend (decimal?)
+  isbn: string; // Can be empty string
+  language: string; // Defaults to "Russian" in backend
+  pageCount: number;
   isAvailable: boolean;
-  createdAt?: string;
-  updatedAt?: string;
+  createdAt: string; // ISO date string
+  updatedAt: string; // ISO date string
 }
 
 export type BookCollection = Book[];

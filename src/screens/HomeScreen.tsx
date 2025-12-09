@@ -23,7 +23,7 @@ export const HomeScreen = () => {
   const { addItem } = useCart();
   const filters = useBookFilters(books);
 
-  const onBookPress = (bookId: string) => navigation.navigate('BookDetails', { bookId });
+  const onBookPress = (book: { id: string }) => navigation.navigate('BookDetails', { bookId: book.id });
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]} contentContainerStyle={styles.content}>
@@ -81,7 +81,7 @@ export const HomeScreen = () => {
                   <Text style={{ color: theme.colors.textMuted }}>{book.author}</Text>
                 </View>
                 <Text style={{ color: theme.colors.accent, fontWeight: '700' }}>
-                  {formatCurrency(book.price)}
+                  {formatCurrency(book.price ?? null)}
                 </Text>
               </View>
             ))

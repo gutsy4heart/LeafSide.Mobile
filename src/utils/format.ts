@@ -1,4 +1,7 @@
-export const formatCurrency = (value: number, currency = 'RUB') => {
+export const formatCurrency = (value: number | null | undefined, currency = 'RUB') => {
+  if (value === null || value === undefined) {
+    return 'Цена не указана';
+  }
   try {
     return new Intl.NumberFormat('ru-RU', {
       style: 'currency',

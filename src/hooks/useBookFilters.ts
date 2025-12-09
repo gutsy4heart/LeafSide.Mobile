@@ -33,7 +33,8 @@ export const useBookFilters = (books: Book[] = []) => {
   const trending = useMemo(
     () =>
       [...books]
-        .sort((a, b) => b.price - a.price)
+        .filter((book) => book.price !== null && book.price !== undefined)
+        .sort((a, b) => (b.price ?? 0) - (a.price ?? 0))
         .slice(0, 6),
     [books],
   );
