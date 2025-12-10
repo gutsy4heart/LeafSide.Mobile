@@ -1,7 +1,9 @@
+import React, { useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { BookImage } from '@/components/BookImage';
@@ -74,7 +76,13 @@ export const BookDetailsScreen = () => {
           <Text style={[styles.author, { color: theme.colors.textMuted }]}>{book.author}</Text>
         </View>
 
-        <View style={[styles.metaSection, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
+        <View style={[styles.metaSection, { borderColor: theme.colors.borderLight }]}>
+          <LinearGradient
+            colors={[theme.colors.glassLight, theme.colors.glass]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.glassOverlay}
+          />
           <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>Информация</Text>
           <View style={styles.metaGrid}>
             {metaItems.map((item, index) => (
@@ -105,7 +113,11 @@ export const BookDetailsScreen = () => {
               label="Добавить в корзину"
               onPress={() => {
                 addItem(book);
-                navigation.navigate('Cart');
+                // Navigate to Cart tab
+                const tabNavigation = navigation.getParent();
+                if (tabNavigation) {
+                  (tabNavigation as any).navigate('Tabs', { screen: 'Cart' });
+                }
               }}
               variant="primary"
             />
@@ -184,10 +196,22 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   metaSection: {
-    padding: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    gap: 12,
+    padding: 20,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    gap: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6,
+    backgroundColor: 'transparent',
+    overflow: 'hidden',
+  },
+  glassOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 20,
+    zIndex: 0,
   },
   sectionTitle: {
     fontSize: 18,
@@ -196,6 +220,8 @@ const styles = StyleSheet.create({
   },
   metaGrid: {
     gap: 10,
+    zIndex: 1,
+    position: 'relative',
   },
   metaItem: {
     flexDirection: 'row',
@@ -220,9 +246,14 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   footer: {
-    padding: 20,
-    gap: 16,
+    padding: 24,
+    gap: 20,
     borderTopWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
   },
   priceSection: {
     gap: 4,

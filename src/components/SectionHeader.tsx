@@ -30,20 +30,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: 22,
+    fontWeight: '700',
+    letterSpacing: -0.3,
   },
   action: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
   },
   actionLabel: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
+    letterSpacing: 0.2,
   },
 });
 

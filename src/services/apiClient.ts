@@ -20,41 +20,62 @@ interface ApiRequestOptions {
 }
 
 const buildUrl = (path: string) => {
+  const baseUrl = getApiBaseUrl();
   const normalized = path.startsWith('/') ? path : `/${path}`;
-  return `${getApiBaseUrl()}${normalized}`;
+  const fullUrl = `${baseUrl}${normalized}`;
+  console.log('[API] Building URL:', { baseUrl, path, fullUrl });
+  return fullUrl;
 };
 
 export async function apiFetch<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
   const { method = 'GET', body, token, headers, signal } = options;
-  const response = await fetch(buildUrl(path), {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...headers,
-    },
-    body: body ? JSON.stringify(body) : undefined,
-    signal,
-  });
+  const url = buildUrl(path);
+  
+  console.log(`[API] ${method} ${url}`);
+  
+  try {
+    const response = await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...headers,
+      },
+      body: body ? JSON.stringify(body) : undefined,
+      signal,
+    });
 
-  let payload: unknown = null;
-  const text = await response.text();
-  if (text) {
-    try {
-      payload = JSON.parse(text);
-    } catch {
-      payload = text;
+    let payload: unknown = null;
+    const text = await response.text();
+    if (text) {
+      try {
+        payload = JSON.parse(text);
+      } catch {
+        payload = text;
+      }
     }
-  }
 
-  if (!response.ok) {
+    if (!response.ok) {
+      console.error(`[API] Error ${response.status}:`, payload);
+      throw new LeafSideApiError(
+        typeof payload === 'string' ? payload : 'LeafSide API request failed',
+        response.status,
+        payload,
+      );
+    }
+
+    console.log(`[API] Success:`, Array.isArray(payload) ? `${payload.length} items` : 'OK');
+    return payload as T;
+  } catch (error) {
+    if (error instanceof LeafSideApiError) {
+      throw error;
+    }
+    console.error(`[API] Network error:`, error);
     throw new LeafSideApiError(
-      typeof payload === 'string' ? payload : 'LeafSide API request failed',
-      response.status,
-      payload,
+      error instanceof Error ? error.message : 'Network request failed',
+      0,
+      error,
     );
   }
-
-  return payload as T;
 }
 

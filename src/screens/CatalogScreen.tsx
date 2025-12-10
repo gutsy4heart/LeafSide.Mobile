@@ -16,10 +16,18 @@ const POPULAR_GENRES = ['Все', 'Romance', 'Thriller', 'Fantasy', 'Self-Help',
 
 export const CatalogScreen = () => {
   const theme = useTheme();
-  const { data: books = [], isLoading } = useBooks();
+  const { data: books = [], isLoading, error } = useBooks();
   const { addItem } = useCart();
   const filters = useBookFilters(books);
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
+  // Debug logging
+  if (error) {
+    console.error('[CatalogScreen] Error loading books:', error);
+  }
+  if (books.length > 0) {
+    console.log('[CatalogScreen] Books loaded:', books.length);
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>

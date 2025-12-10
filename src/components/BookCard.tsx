@@ -1,5 +1,7 @@
+import React, { useCallback, useMemo } from 'react';
 import { Feather } from '@expo/vector-icons';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { useTheme } from '@/theme';
 import type { Book } from '@/types/book';
@@ -11,9 +13,10 @@ interface BookCardProps {
   onAddToCart?: (book: Book) => void;
 }
 
-export const BookCard = ({ book, onPress, onAddToCart }: BookCardProps) => {
+export const BookCard = React.memo<BookCardProps>(({ book, onPress, onAddToCart }) => {
   const theme = useTheme();
-  const handlePress = () => {
+  
+  const handlePress = useCallback(() => {
     if (typeof onPress === 'function') {
       if (onPress.length === 0) {
         (onPress as () => void)();
@@ -21,45 +24,68 @@ export const BookCard = ({ book, onPress, onAddToCart }: BookCardProps) => {
         (onPress as (book: Book) => void)(book);
       }
     }
-  };
-  const handleAdd = () => onAddToCart?.(book);
+  }, [onPress, book]);
 
-  const hasImage = book.imageUrl && book.imageUrl.trim() !== '';
-  const isAvailable = book.isAvailable && book.price !== null && book.price !== undefined;
+  const handleAdd = useCallback(() => {
+    onAddToCart?.(book);
+  }, [onAddToCart, book]);
+
+  const hasImage = useMemo(() => book.imageUrl && book.imageUrl.trim() !== '', [book.imageUrl]);
+  const isAvailable = useMemo(
+    () => book.isAvailable && book.price !== null && book.price !== undefined,
+    [book.isAvailable, book.price]
+  );
 
   return (
     <Pressable
-      style={[styles.card, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}
+      style={({ pressed }) => [
+        styles.card,
+        {
+          borderColor: theme.colors.borderLight,
+          opacity: pressed ? 0.9 : 1,
+          transform: [{ scale: pressed ? 0.98 : 1 }],
+        },
+      ]}
       onPress={handlePress}
     >
-      {hasImage ? (
-        <Image
-          source={{ uri: book.imageUrl }}
-          style={styles.cover}
-          resizeMode="cover"
-        />
-      ) : (
-        <View style={[styles.coverPlaceholder, { backgroundColor: theme.colors.cardAlt }]}>
-          <Feather name="book-open" size={32} color={theme.colors.textMuted} />
-        </View>
-      )}
-      
-      {!isAvailable && (
-        <View style={[styles.unavailableBadge, { backgroundColor: theme.colors.danger }]}>
-          <Text style={styles.unavailableText}>Недоступна</Text>
-        </View>
-      )}
+      {/* Glassmorphism overlay */}
+      <LinearGradient
+        colors={[theme.colors.glassLight, theme.colors.glass]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.glassOverlay}
+      />
+      <View style={styles.imageContainer}>
+        {hasImage ? (
+          <Image
+            source={{ uri: book.imageUrl }}
+            style={styles.cover}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={[styles.coverPlaceholder, { backgroundColor: theme.colors.cardAlt }]}>
+            <Feather name="book-open" size={32} color={theme.colors.textMuted} />
+          </View>
+        )}
+        
+        {!isAvailable && (
+          <View style={[styles.unavailableBadge, { backgroundColor: theme.colors.danger }]}>
+            <Text style={styles.unavailableText}>Недоступна</Text>
+          </View>
+        )}
+        
+        {book.genre && (
+          <View style={[styles.genreBadge, { backgroundColor: theme.colors.accent + '20', borderColor: theme.colors.accent + '40' }]}>
+            <Text style={[styles.genreText, { color: theme.colors.accent }]}>{book.genre}</Text>
+          </View>
+        )}
+      </View>
 
       <View style={styles.content}>
         <View style={styles.header}>
           <Text style={[styles.title, { color: theme.colors.textPrimary }]} numberOfLines={2}>
             {book.title}
           </Text>
-          {book.genre && (
-            <View style={[styles.genreBadge, { backgroundColor: theme.colors.cardAlt }]}>
-              <Text style={[styles.genreText, { color: theme.colors.accent }]}>{book.genre}</Text>
-            </View>
-          )}
         </View>
 
         <Text style={[styles.author, { color: theme.colors.textMuted }]} numberOfLines={1}>
@@ -85,7 +111,14 @@ export const BookCard = ({ book, onPress, onAddToCart }: BookCardProps) => {
           </View>
           {onAddToCart && isAvailable && (
             <Pressable
-              style={[styles.addButton, { backgroundColor: theme.colors.accent }]}
+              style={({ pressed }) => [
+                styles.addButton,
+                {
+                  backgroundColor: theme.colors.accent,
+                  opacity: pressed ? 0.8 : 1,
+                  transform: [{ scale: pressed ? 0.95 : 1 }],
+                },
+              ]}
               onPress={handleAdd}
             >
               <Feather name="shopping-cart" size={18} color="#062016" />
@@ -95,23 +128,48 @@ export const BookCard = ({ book, onPress, onAddToCart }: BookCardProps) => {
       </View>
     </Pressable>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison for optimization
+  return (
+    prevProps.book.id === nextProps.book.id &&
+    prevProps.book.title === nextProps.book.title &&
+    prevProps.book.price === nextProps.book.price &&
+    prevProps.book.isAvailable === nextProps.book.isAvailable
+  );
+});
+
+BookCard.displayName = 'BookCard';
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 20,
-    borderWidth: 1,
+    borderRadius: 24,
+    borderWidth: 1.5,
     overflow: 'hidden',
     marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 10,
+    backgroundColor: 'transparent',
+  },
+  glassOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 24,
+    zIndex: 0,
+  },
+  imageContainer: {
+    position: 'relative',
+    overflow: 'hidden',
   },
   cover: {
     width: '100%',
-    height: 200,
+    height: 220,
     backgroundColor: '#1a2332',
   },
   coverPlaceholder: {
     width: '100%',
-    height: 200,
+    height: 220,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -119,49 +177,70 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 12,
     right: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    zIndex: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    zIndex: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
   unavailableText: {
     color: '#fff',
     fontSize: 11,
-    fontWeight: '600',
-  },
-  content: {
-    padding: 16,
-    gap: 8,
-  },
-  header: {
-    gap: 8,
-  },
-  title: {
-    fontSize: 17,
     fontWeight: '700',
-    lineHeight: 22,
+    letterSpacing: 0.5,
   },
   genreBadge: {
-    alignSelf: 'flex-start',
+    position: 'absolute',
+    top: 12,
+    left: 12,
     paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingVertical: 5,
+    borderRadius: 14,
+    borderWidth: 1,
+    zIndex: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   genreText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+  content: {
+    padding: 18,
+    gap: 10,
+    position: 'relative',
+    zIndex: 1,
+  },
+  header: {
+    gap: 6,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '700',
+    lineHeight: 24,
+    letterSpacing: -0.3,
   },
   author: {
     fontSize: 14,
     fontWeight: '500',
+    opacity: 0.8,
   },
   description: {
     fontSize: 13,
-    lineHeight: 18,
-    marginTop: 4,
+    lineHeight: 20,
+    marginTop: 2,
+    opacity: 0.7,
   },
   footer: {
-    marginTop: 12,
+    marginTop: 14,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
@@ -171,18 +250,25 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   price: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 20,
+    fontWeight: '800',
+    letterSpacing: -0.5,
   },
   publishing: {
     fontSize: 11,
+    opacity: 0.6,
   },
   addButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 12,
+    shadowColor: '#34d399',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
+    elevation: 8,
   },
 });

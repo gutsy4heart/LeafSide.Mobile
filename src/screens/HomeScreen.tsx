@@ -10,18 +10,34 @@ import { SectionHeader } from '@/components/SectionHeader';
 import { useBooks } from '@/hooks/useBooks';
 import { useBookFilters } from '@/hooks/useBookFilters';
 import { useCart } from '@/providers/CartProvider';
-import type { RootStackParamList } from '@/navigation/types';
+import type { RootStackParamList, TabParamList } from '@/navigation/types';
+import type { Book } from '@/types/book';
 import { useTheme } from '@/theme';
 import { formatCurrency } from '@/utils/format';
+import type { CompositeNavigationProp } from '@react-navigation/native';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 
 const GENRES = ['Все', 'Fiction', 'Fantasy', 'History', 'Business', 'Science Fiction', 'Other'];
 
+type HomeScreenNavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<TabParamList, 'Home'>,
+  NativeStackNavigationProp<RootStackParamList>
+>;
+
 export const HomeScreen = () => {
   const theme = useTheme();
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { data: books = [], isLoading } = useBooks();
+  const navigation = useNavigation<HomeScreenNavigationProp>();
+  const { data: books = [], isLoading, error } = useBooks();
   const { addItem } = useCart();
-  const filters = useBookFilters(books);
+  const filters = useBookFilters(books as Book[]);
+
+  // Debug logging
+  if (error) {
+    console.error('[HomeScreen] Error loading books:', error);
+  }
+  if ((books as Book[]).length > 0) {
+    console.log('[HomeScreen] Books loaded:', (books as Book[]).length);
+  }
 
   const onBookPress = (book: { id: string }) => navigation.navigate('BookDetails', { bookId: book.id });
 
@@ -32,7 +48,13 @@ export const HomeScreen = () => {
           headline="LeafSide Library"
           subheading="Современный магазин с неоновой эстетикой и любимыми авторами."
           ctaLabel="Каталог"
-          onCtaPress={() => navigation.navigate('Catalog')}
+          onCtaPress={() => {
+            // Navigate to Catalog tab
+            const tabNavigation = navigation.getParent();
+            if (tabNavigation) {
+              (tabNavigation as any).navigate('Catalog');
+            }
+          }}
         />
 
         <SearchBar value={filters.query} onChange={filters.setQuery} placeholder="Найти книгу или автора" />
@@ -55,14 +77,23 @@ export const HomeScreen = () => {
         </View>
 
         <View>
-          <SectionHeader title="Подборка дня" actionLabel="Смотреть все" onActionPress={() => navigation.navigate('Catalog')} />
+          <SectionHeader
+            title="Подборка дня"
+            actionLabel="Смотреть все"
+            onActionPress={() => {
+              const tabNavigation = navigation.getParent();
+              if (tabNavigation) {
+                (tabNavigation as any).navigate('Catalog');
+              }
+            }}
+          />
           {isLoading ? (
             <ActivityIndicator color={theme.colors.accent} />
           ) : (
             <View style={styles.grid}>
               {filters.featured.map((book) => (
                 <View key={book.id} style={styles.gridItem}>
-                  <BookCard book={book} onPress={() => onBookPress(book.id)} onAddToCart={() => addItem(book)} />
+                  <BookCard book={book} onPress={() => onBookPress({ id: book.id })} onAddToCart={() => addItem(book)} />
                 </View>
               ))}
             </View>
@@ -117,16 +148,22 @@ const styles = StyleSheet.create({
   },
   trendingCard: {
     borderWidth: 1,
-    borderRadius: 18,
-    padding: 16,
+    borderRadius: 20,
+    padding: 18,
     marginBottom: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   trendingTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 17,
+    fontWeight: '700',
+    letterSpacing: -0.2,
   },
 });
 

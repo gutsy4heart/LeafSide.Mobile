@@ -2,7 +2,8 @@ import type { Book } from '@/types/book';
 
 import { apiFetch } from './apiClient';
 
-export const fetchBooks = () => apiFetch<Book[]>('/api/books');
+// Backend uses /api/Books (capital B) based on [Route("api/[controller]")]
+export const fetchBooks = () => apiFetch<Book[]>('/api/Books');
 
-export const fetchBookById = (bookId: string) => apiFetch<Book>(`/api/books/${bookId}`);
+export const fetchBookById = (bookId: string) => apiFetch<Book>(`/api/Books/${bookId}`);
 

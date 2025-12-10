@@ -1,5 +1,12 @@
 import type { ConfigContext, ExpoConfig } from '@expo/config';
 
+// Expo SDK 54 automatically loads .env file
+// But we need to ensure it's read correctly
+const apiUrl = process.env.EXPO_PUBLIC_API_URL?.trim() || 'http://192.168.1.69:5233';
+
+console.log('[app.config] EXPO_PUBLIC_API_URL from process.env:', process.env.EXPO_PUBLIC_API_URL);
+console.log('[app.config] Using API URL:', apiUrl);
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: 'LeafSide Mobile',
@@ -10,7 +17,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   userInterfaceStyle: 'automatic',
   platforms: ['ios', 'android', 'web'],
   extra: {
-    apiUrl: process.env.EXPO_PUBLIC_API_URL ?? 'http://10.0.2.2:5233',
+    apiUrl,
   },
   updates: {
     fallbackToCacheTimeout: 0,
