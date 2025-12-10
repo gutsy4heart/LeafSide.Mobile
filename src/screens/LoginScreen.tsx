@@ -1,12 +1,14 @@
 import { useNavigation } from '@react-navigation/native';
 import { useState } from 'react';
-import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, StyleSheet, Text, TextInput, View, Pressable } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { PrimaryButton } from '@/components/PrimaryButton';
 import type { RootStackParamList } from '@/navigation/types';
 import { useAuth } from '@/providers/AuthProvider';
 import { useTheme } from '@/theme';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { LeafSideApiError } from '@/services/apiClient';
 
 export const LoginScreen = () => {
   const theme = useTheme();
@@ -16,13 +18,36 @@ export const LoginScreen = () => {
   const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
 
+  const useTestCredentials = () => {
+    setForm({
+      email: 'admin@leafside.local',
+      password: 'Admin12345!',
+    });
+  };
+
   const submit = async () => {
     try {
       setLoading(true);
+      console.log('[LoginScreen] Attempting login with:', form.email);
       await signIn(form);
       navigation.navigate('Tabs');
     } catch (error) {
-      Alert.alert('Ошибка входа', (error as Error).message);
+      let errorMessage = 'Неизвестная ошибка';
+      
+      if (error instanceof LeafSideApiError) {
+        if (error.status === 401) {
+          errorMessage = 'Неверный email или пароль.\n\nПроверьте учетные данные или зарегистрируйтесь.';
+        } else if (error.status === 0) {
+          errorMessage = 'Не удается подключиться к серверу.\n\nПроверьте подключение к интернету.';
+        } else {
+          errorMessage = `Ошибка сервера (${error.status})`;
+        }
+      } else {
+        errorMessage = (error as Error).message;
+      }
+      
+      Alert.alert('Ошибка входа', errorMessage);
+      console.error('[LoginScreen] Login error:', error);
     } finally {
       setLoading(false);
     }
@@ -30,36 +55,91 @@ export const LoginScreen = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <Text style={[styles.heading, { color: theme.colors.textPrimary }]}>Вход</Text>
-      {(['email', 'password'] as const).map((field) => (
-        <View key={field}>
-          <Text style={[styles.label, { color: theme.colors.textMuted }]}>{field}</Text>
-          <TextInput
-            style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.textPrimary }]}
-            value={form[field]}
-            onChangeText={(value) => setForm((prev) => ({ ...prev, [field]: value }))}
-            placeholderTextColor={theme.colors.textMuted}
-            secureTextEntry={field === 'password'}
-            autoCapitalize="none"
-            keyboardType={field === 'email' ? 'email-address' : 'default'}
-          />
-        </View>
-      ))}
-      <PrimaryButton label="Войти" onPress={submit} loading={loading} disabled={!form.email || !form.password} />
-      <Text style={{ color: theme.colors.textSecondary, textAlign: 'center' }}>
-        Нет аккаунта?{' '}
-        <Text style={{ color: theme.colors.accent }} onPress={() => navigation.navigate('Register')}>
-          Зарегистрироваться
+      <LinearGradient
+        colors={[theme.colors.backgroundGradientStart, theme.colors.backgroundGradientEnd]}
+        style={StyleSheet.absoluteFill}
+      />
+      
+      <View style={styles.content}>
+        <Text style={[styles.heading, { color: theme.colors.textPrimary }]}>Вход</Text>
+        
+        {/* Test credentials hint */}
+        <Pressable 
+          style={[styles.testHint, { backgroundColor: theme.colors.glassMedium, borderColor: theme.colors.borderLight }]}
+          onPress={useTestCredentials}
+        >
+          <Text style={[styles.testHintText, { color: theme.colors.accentLight }]}>
+            💡 Нажмите для автозаполнения тестовых данных
+          </Text>
+        </Pressable>
+        
+        {(['email', 'password'] as const).map((field) => (
+          <View key={field}>
+            <Text style={[styles.label, { color: theme.colors.textMuted }]}>
+              {field === 'email' ? 'Email' : 'Пароль'}
+            </Text>
+            <TextInput
+              style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.textPrimary, backgroundColor: theme.colors.glass }]}
+              value={form[field]}
+              onChangeText={(value) => setForm((prev) => ({ ...prev, [field]: value }))}
+              placeholder={field === 'email' ? 'admin@leafside.local' : 'Admin12345!'}
+              placeholderTextColor={theme.colors.textMuted}
+              secureTextEntry={field === 'password'}
+              autoCapitalize="none"
+              keyboardType={field === 'email' ? 'email-address' : 'default'}
+            />
+          </View>
+        ))}
+        <PrimaryButton label="Войти" onPress={submit} loading={loading} disabled={!form.email || !form.password} />
+        <Text style={{ color: theme.colors.textSecondary, textAlign: 'center' }}>
+          Нет аккаунта?{' '}
+          <Text style={{ color: theme.colors.accent }} onPress={() => navigation.navigate('Register')}>
+            Зарегистрироваться
+          </Text>
         </Text>
-      </Text>
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, gap: 16, justifyContent: 'center' },
-  heading: { fontSize: 28, fontWeight: '700' },
-  label: { marginBottom: 6, textTransform: 'capitalize' },
-  input: { borderWidth: 1, borderRadius: 14, padding: 12 },
+  container: { 
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+    padding: 20,
+    gap: 16,
+    justifyContent: 'center',
+    zIndex: 1,
+  },
+  heading: { 
+    fontSize: 32, 
+    fontWeight: '900',
+    marginBottom: 8,
+    letterSpacing: -0.5,
+  },
+  testHint: {
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    marginBottom: 8,
+  },
+  testHintText: {
+    fontSize: 13,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  label: { 
+    marginBottom: 8,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  input: { 
+    borderWidth: 1.5,
+    borderRadius: 14,
+    padding: 14,
+    fontSize: 16,
+  },
 });
 
