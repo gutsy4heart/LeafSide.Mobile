@@ -72,9 +72,9 @@ export const BookDetailsScreen = () => {
             <Feather name="alert-circle" size={48} color={theme.colors.danger} />
           </View>
           <Text style={[styles.errorText, { color: theme.colors.textPrimary }]}>
-            Не удалось загрузить книгу
+            Failed to load book
           </Text>
-          <PrimaryButton label="Назад" onPress={() => navigation.goBack()} variant="glass" />
+          <PrimaryButton label="Go Back" onPress={() => navigation.goBack()} variant="glass" />
         </View>
       </SafeAreaView>
     );
@@ -82,12 +82,12 @@ export const BookDetailsScreen = () => {
 
   const isAvailable = book.isAvailable && book.price !== null && book.price !== undefined;
   const metaItems = [
-    { icon: 'tag', label: 'Жанр', value: book.genre },
-    { icon: 'user', label: 'Автор', value: book.author },
-    { icon: 'book', label: 'Издательство', value: book.publishing },
-    { icon: 'calendar', label: 'Год издания', value: book.created },
-    { icon: 'globe', label: 'Язык', value: book.language || 'Не указан' },
-    { icon: 'file-text', label: 'Страниц', value: book.pageCount ? `${book.pageCount}` : '—' },
+    { icon: 'tag', label: 'Genre', value: book.genre },
+    { icon: 'user', label: 'Author', value: book.author },
+    { icon: 'book', label: 'Publisher', value: book.publishing },
+    { icon: 'calendar', label: 'Publication Year', value: book.created },
+    { icon: 'globe', label: 'Language', value: book.language || 'Not specified' },
+    { icon: 'file-text', label: 'Pages', value: book.pageCount ? `${book.pageCount}` : '—' },
     { icon: 'hash', label: 'ISBN', value: book.isbn || '—' },
   ].filter((item) => item.value) as Array<{ icon: string; label: string; value: string }>;
 
@@ -119,7 +119,7 @@ export const BookDetailsScreen = () => {
                 {!isAvailable && (
                   <View style={[styles.unavailableBadge, { backgroundColor: theme.colors.danger }]}>
                     <Feather name="x-circle" size={14} color="#fff" style={{ marginRight: 4 }} />
-                    <Text style={styles.unavailableText}>Недоступна</Text>
+                    <Text style={styles.unavailableText}>Unavailable</Text>
                   </View>
                 )}
               </View>
@@ -143,7 +143,7 @@ export const BookDetailsScreen = () => {
                   <Feather name="info" size={20} color={theme.colors.accent} />
                 </View>
                 <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
-                  Информация
+                  Information
                 </Text>
               </View>
               <View style={styles.metaGrid}>
@@ -176,7 +176,7 @@ export const BookDetailsScreen = () => {
                     <Feather name="file-text" size={20} color={theme.colors.accent} />
                   </View>
                   <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
-                    Описание
+                    Description
                   </Text>
                 </View>
                 <Text style={[styles.description, { color: theme.colors.textSecondary }]}>
@@ -195,7 +195,7 @@ export const BookDetailsScreen = () => {
             />
             <View style={styles.priceSection}>
               <Text style={[styles.priceLabel, { color: theme.colors.textMuted }]}>
-                Цена
+                Price
               </Text>
               <View style={styles.priceContainer}>
                 <Text style={[styles.price, { color: theme.colors.accentLight }]}>
@@ -210,7 +210,7 @@ export const BookDetailsScreen = () => {
             {isAvailable ? (
               <View style={styles.actions}>
                 <PrimaryButton
-                  label="Добавить в корзину"
+                  label="Add to Cart"
                   onPress={() => {
                     addItem(book);
                     const tabNavigation = navigation.getParent();
@@ -223,7 +223,7 @@ export const BookDetailsScreen = () => {
                 />
                 <PrimaryButton
                   variant="glass"
-                  label="Оформить заказ"
+                  label="Checkout"
                   onPress={() => navigation.navigate('Checkout')}
                   icon={<Feather name="credit-card" size={18} color={theme.colors.textPrimary} />}
                 />
@@ -232,7 +232,7 @@ export const BookDetailsScreen = () => {
               <View style={[styles.unavailableMessage, { backgroundColor: theme.colors.dangerGlass, borderColor: theme.colors.danger }]}>
                 <Feather name="info" size={20} color={theme.colors.danger} />
                 <Text style={[styles.unavailableMessageText, { color: theme.colors.textPrimary }]}>
-                  Книга временно недоступна для заказа
+                  Book is temporarily unavailable for order
                 </Text>
               </View>
             )}

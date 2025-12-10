@@ -34,7 +34,7 @@ export const CheckoutScreen = () => {
 
   const mutation = useMutation({
     mutationFn: () => {
-      if (!token) throw new Error('Необходимо войти в аккаунт');
+      if (!token) throw new Error('You need to sign in');
       return createOrder(token, {
         items: cart.items.map((item) => ({
           bookId: item.bookId,
@@ -49,12 +49,12 @@ export const CheckoutScreen = () => {
       });
     },
     onSuccess: () => {
-      Alert.alert('Успех', 'Заказ создан!');
+      Alert.alert('Success', 'Order created!');
       clear();
       navigation.navigate('Tabs');
     },
     onError: (error: Error) => {
-      Alert.alert('Ошибка', error.message);
+      Alert.alert('Error', error.message);
     },
   });
 
@@ -62,9 +62,9 @@ export const CheckoutScreen = () => {
     return (
       <View style={[styles.center, { backgroundColor: theme.colors.background }]}>
         <Text style={{ color: theme.colors.textPrimary, textAlign: 'center', marginBottom: 16 }}>
-          Авторизуйтесь, чтобы оформить заказ.
+          Sign in to complete your order.
         </Text>
-        <PrimaryButton label="Войти" onPress={() => navigation.navigate('Login')} />
+        <PrimaryButton label="Sign In" onPress={() => navigation.navigate('Login')} />
       </View>
     );
   }
@@ -72,17 +72,17 @@ export const CheckoutScreen = () => {
   if (cart.items.length === 0) {
     return (
       <View style={[styles.center, { backgroundColor: theme.colors.background }]}>
-        <EmptyState icon="shopping-bag" title="Корзина пуста" subtitle="Добавьте книги перед оформлением" />
-        <PrimaryButton label="Вернуться в каталог" onPress={() => navigation.navigate('Tabs')} />
+        <EmptyState icon="shopping-bag" title="Cart is empty" subtitle="Add books before checkout" />
+        <PrimaryButton label="Back to Catalog" onPress={() => navigation.navigate('Tabs')} />
       </View>
     );
   }
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]} contentContainerStyle={styles.content}>
-      <Text style={[styles.heading, { color: theme.colors.textPrimary }]}>Оформление заказа</Text>
+      <Text style={[styles.heading, { color: theme.colors.textPrimary }]}>Checkout</Text>
       <Text style={{ color: theme.colors.textSecondary }}>
-        Сумма к оплате: {formatCurrency(total)}
+        Total Amount: {formatCurrency(total)}
       </Text>
 
       {(['customerName', 'customerEmail', 'customerPhone', 'shippingAddress'] as const).map((field) => {
@@ -107,7 +107,7 @@ export const CheckoutScreen = () => {
       })}
 
       <View>
-        <Text style={[styles.label, { color: theme.colors.textMuted }]}>Комментарий</Text>
+        <Text style={[styles.label, { color: theme.colors.textMuted }]}>Comment</Text>
         <TextInput
           style={[
             styles.input,
@@ -122,7 +122,7 @@ export const CheckoutScreen = () => {
       </View>
 
       <PrimaryButton
-        label="Подтвердить заказ"
+        label="Confirm Order"
         onPress={() => mutation.mutate()}
         loading={mutation.isPending}
         disabled={cart.items.length === 0 || mutation.isPending}

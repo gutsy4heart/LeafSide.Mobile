@@ -33,21 +33,21 @@ export const LoginScreen = () => {
       await signIn(form);
       navigation.navigate('Tabs');
     } catch (error) {
-      let errorMessage = 'Неизвестная ошибка';
+      let errorMessage = 'Unknown error';
       
       if (error instanceof LeafSideApiError) {
         if (error.status === 401) {
-          errorMessage = 'Неверный email или пароль.\n\nПроверьте учетные данные или зарегистрируйтесь.';
+          errorMessage = 'Invalid email or password.\n\nPlease check your credentials or sign up.';
         } else if (error.status === 0) {
-          errorMessage = 'Не удается подключиться к серверу.\n\nПроверьте подключение к интернету.';
+          errorMessage = 'Cannot connect to server.\n\nPlease check your internet connection.';
         } else {
-          errorMessage = `Ошибка сервера (${error.status})`;
+          errorMessage = `Server error (${error.status})`;
         }
       } else {
         errorMessage = (error as Error).message;
       }
       
-      Alert.alert('Ошибка входа', errorMessage);
+      Alert.alert('Login Error', errorMessage);
       console.error('[LoginScreen] Login error:', error);
     } finally {
       setLoading(false);
@@ -62,7 +62,7 @@ export const LoginScreen = () => {
       />
       
       <View style={styles.content}>
-        <Text style={[styles.heading, { color: theme.colors.textPrimary }]}>Вход</Text>
+        <Text style={[styles.heading, { color: theme.colors.textPrimary }]}>Sign In</Text>
         
         {/* Test credentials hint */}
         <Pressable 
@@ -70,14 +70,14 @@ export const LoginScreen = () => {
           onPress={useTestCredentials}
         >
           <Text style={[styles.testHintText, { color: theme.colors.accentLight }]}>
-            💡 Нажмите для автозаполнения тестовых данных
+            💡 Tap to autofill test credentials
           </Text>
         </Pressable>
         
         {(['email', 'password'] as const).map((field) => (
           <View key={field}>
             <Text style={[styles.label, { color: theme.colors.textMuted }]}>
-              {field === 'email' ? 'Email' : 'Пароль'}
+              {field === 'email' ? 'Email' : 'Password'}
             </Text>
             <TextInput
               style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.textPrimary, backgroundColor: theme.colors.glass }]}
@@ -91,11 +91,11 @@ export const LoginScreen = () => {
             />
           </View>
         ))}
-        <PrimaryButton label="Войти" onPress={submit} loading={loading} disabled={!form.email || !form.password} />
+        <PrimaryButton label="Sign In" onPress={submit} loading={loading} disabled={!form.email || !form.password} />
         <Text style={{ color: theme.colors.textSecondary, textAlign: 'center' }}>
-          Нет аккаунта?{' '}
+          Don't have an account?{' '}
           <Text style={{ color: theme.colors.accent }} onPress={() => navigation.navigate('Register')}>
-            Зарегистрироваться
+            Sign Up
           </Text>
         </Text>
       </View>

@@ -49,11 +49,11 @@ export const CartScreen = React.memo(() => {
           </View>
           <View style={{ flex: 1 }}>
             <Text style={[styles.heading, { color: theme.colors.textPrimary }]}>
-              Корзина
+              Shopping Cart
             </Text>
             {cart.items.length > 0 && (
               <Text style={[styles.itemCount, { color: theme.colors.textMuted }]}>
-                {cart.items.length} {cart.items.length === 1 ? 'товар' : 'товара'}
+                {cart.items.length} {cart.items.length === 1 ? 'item' : 'items'}
               </Text>
             )}
           </View>
@@ -65,7 +65,7 @@ export const CartScreen = React.memo(() => {
         </View>
 
         {cart.items.length === 0 ? (
-          <EmptyState icon="shopping-bag" title="Корзина пуста" subtitle="Добавьте книги из каталога" />
+          <EmptyState icon="shopping-bag" title="Cart is empty" subtitle="Add books from catalog" />
         ) : (
           <View style={styles.gap}>
             {cart.items.map((item) => (
@@ -90,7 +90,7 @@ export const CartScreen = React.memo(() => {
                 <View style={styles.summaryLabelContainer}>
                   <Feather name="package" size={16} color={theme.colors.textMuted} />
                   <Text style={[styles.summaryLabel, { color: theme.colors.textSecondary }]}>
-                    Товаров
+                    Items
                   </Text>
                 </View>
                 <Text style={[styles.summaryValue, { color: theme.colors.textPrimary }]}>
@@ -104,7 +104,7 @@ export const CartScreen = React.memo(() => {
                     <Feather name="dollar-sign" size={20} color={theme.colors.accent} />
                   </View>
                   <Text style={[styles.totalLabel, { color: theme.colors.textPrimary }]}>
-                    Итого
+                    Total
                   </Text>
                 </View>
                 <Text style={[styles.totalAmount, { color: theme.colors.accentLight }]}>
@@ -114,13 +114,13 @@ export const CartScreen = React.memo(() => {
               
               <View style={styles.actions}>
                 <PrimaryButton 
-                  label="Оформить заказ" 
+                  label="Checkout" 
                   onPress={handleCheckout}
                   icon={<Feather name="credit-card" size={18} color="#0d1b2a" />}
                 />
                 <PrimaryButton 
                   variant="glass" 
-                  label="Очистить корзину" 
+                  label="Clear Cart" 
                   onPress={clear}
                   icon={<Feather name="trash-2" size={18} color={theme.colors.textPrimary} />}
                 />

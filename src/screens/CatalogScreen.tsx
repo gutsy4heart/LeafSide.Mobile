@@ -16,7 +16,7 @@ import type { Book } from '@/types/book';
 import { useTheme } from '@/theme';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-const POPULAR_GENRES = ['Все', 'Romance', 'Thriller', 'Fantasy', 'Self-Help', 'History'];
+const POPULAR_GENRES = ['All', 'Romance', 'Thriller', 'Fantasy', 'Self-Help', 'History'];
 
 export const CatalogScreen = () => {
   const theme = useTheme();
@@ -47,25 +47,25 @@ export const CatalogScreen = () => {
         </View>
         <View style={{ flex: 1 }}>
           <Text style={[styles.heading, { color: theme.colors.textPrimary }]}>
-            Каталог книг
+            Book Catalog
           </Text>
           <Text style={[styles.subheading, { color: theme.colors.textMuted }]}>
-            {(books as Book[]).length} книг в наличии
+            {(books as Book[]).length} books available
           </Text>
         </View>
       </View>
 
-      <SearchBar value={filters.query} onChange={filters.setQuery} placeholder="Поиск по названию или автору" />
-      <SectionHeader title="Фильтр по жанрам" />
+      <SearchBar value={filters.query} onChange={filters.setQuery} placeholder="Search by title or author" />
+      <SectionHeader title="Filter by Genre" />
       <View style={styles.chips}>
         {POPULAR_GENRES.map((genre) => {
-          const selected = genre === 'Все' ? filters.genre === null : filters.genre === genre;
+          const selected = genre === 'All' ? filters.genre === null : filters.genre === genre;
           return (
             <FilterChip
               key={genre}
               label={genre}
               selected={selected}
-              onPress={() => filters.setGenre(genre === 'Все' ? null : genre)}
+              onPress={() => filters.setGenre(genre === 'All' ? null : genre)}
             />
           );
         })}

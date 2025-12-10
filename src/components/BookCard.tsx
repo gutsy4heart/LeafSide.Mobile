@@ -132,7 +132,7 @@ export const BookCard = React.memo<BookCardProps>(({ book, onPress, onAddToCart 
           {!isAvailable && (
             <View style={[styles.unavailableBadge, { backgroundColor: theme.colors.danger }]}>
               <Feather name="x-circle" size={10} color="#fff" style={{ marginRight: 3 }} />
-              <Text style={styles.unavailableText}>Недоступна</Text>
+              <Text style={styles.unavailableText}>Unavailable</Text>
             </View>
           )}
           

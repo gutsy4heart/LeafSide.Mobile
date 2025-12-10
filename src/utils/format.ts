@@ -1,15 +1,15 @@
 export const formatCurrency = (value: number | null | undefined, currency = 'EUR') => {
   if (value === null || value === undefined) {
-    return 'Цена не указана';
+    return 'Price not specified';
   }
   try {
-    return new Intl.NumberFormat('de-DE', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency,
       maximumFractionDigits: 2,
     }).format(value);
   } catch {
-    return `${value.toFixed(2)} ${currency}`;
+    return `${currency} ${value.toFixed(2)}`;
   }
 };
 

@@ -47,10 +47,10 @@ export const CartItemRow = React.memo<CartItemRowProps>(({ item, onIncrement, on
       <BookImage imageUrl={book?.imageUrl} width={80} height={100} borderRadius={14} />
       <View style={styles.content}>
         <Text style={[styles.title, { color: theme.colors.textPrimary }]} numberOfLines={2}>
-          {book?.title ?? 'Книга'}
+          {book?.title ?? 'Book'}
         </Text>
         <Text style={[styles.subtitle, { color: theme.colors.textMuted }]} numberOfLines={1}>
-          {book?.author ?? 'Автор неизвестен'}
+          {book?.author ?? 'Unknown author'}
         </Text>
         <Text style={[styles.price, { color: theme.colors.accent }]}>{price}</Text>
         <View style={styles.actions}>

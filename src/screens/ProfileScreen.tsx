@@ -45,20 +45,20 @@ export const ProfileScreen = () => {
               <Feather name="user" size={48} color={theme.colors.accent} />
             </View>
             <Text style={[styles.loginTitle, { color: theme.colors.textPrimary }]}>
-              Добро пожаловать!
+              Welcome!
             </Text>
             <Text style={[styles.loginSubtitle, { color: theme.colors.textSecondary }]}>
-              Войдите, чтобы увидеть профиль и заказы
+              Sign in to view your profile and orders
             </Text>
             <View style={styles.loginActions}>
               <PrimaryButton 
-                label="Войти" 
+                label="Sign In" 
                 onPress={() => navigation.navigate('Login')}
                 icon={<Feather name="log-in" size={18} color="#0d1b2a" />}
               />
               <PrimaryButton 
                 variant="glass" 
-                label="Регистрация" 
+                label="Sign Up" 
                 onPress={() => navigation.navigate('Register')}
                 icon={<Feather name="user-plus" size={18} color={theme.colors.textPrimary} />}
               />
@@ -103,7 +103,7 @@ export const ProfileScreen = () => {
             <Text style={[styles.profileName, { color: theme.colors.textPrimary }]}>
               {profile.firstName || profile.lastName 
                 ? `${profile.firstName ?? ''} ${profile.lastName ?? ''}`.trim() 
-                : 'Пользователь'}
+                : 'User'}
             </Text>
             <View style={styles.emailContainer}>
               <Feather name="mail" size={14} color={theme.colors.textMuted} />
@@ -138,7 +138,7 @@ export const ProfileScreen = () => {
               {orders.length}
             </Text>
             <Text style={[styles.statLabel, { color: theme.colors.textMuted }]}>
-              Заказов
+              Orders
             </Text>
           </View>
 
@@ -156,7 +156,7 @@ export const ProfileScreen = () => {
               {orders.reduce((sum, order) => sum + order.items.length, 0)}
             </Text>
             <Text style={[styles.statLabel, { color: theme.colors.textMuted }]}>
-              Товаров
+              Items
             </Text>
           </View>
         </View>
@@ -168,7 +168,7 @@ export const ProfileScreen = () => {
               <Feather name="list" size={20} color={theme.colors.accent} />
             </View>
             <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
-              Мои заказы
+              My Orders
             </Text>
           </View>
 
@@ -187,8 +187,8 @@ export const ProfileScreen = () => {
               />
               <EmptyState 
                 icon="package" 
-                title="Заказов пока нет" 
-                subtitle="Сделайте первый заказ" 
+                title="No orders yet" 
+                subtitle="Make your first order" 
               />
             </View>
           ) : (
@@ -234,7 +234,7 @@ export const ProfileScreen = () => {
                     <View style={styles.orderMetaItem}>
                       <Feather name="package" size={12} color={theme.colors.textMuted} />
                       <Text style={[styles.orderMetaText, { color: theme.colors.textSecondary }]}>
-                        {order.items.length} товаров
+                        {order.items.length} items
                       </Text>
                     </View>
                   </View>
@@ -255,7 +255,7 @@ export const ProfileScreen = () => {
         <View style={styles.logoutSection}>
           <PrimaryButton 
             variant="glass" 
-            label="Выйти из аккаунта" 
+            label="Sign Out" 
             onPress={signOut}
             icon={<Feather name="log-out" size={18} color={theme.colors.textPrimary} />}
           />

@@ -11,7 +11,7 @@ interface SearchBarProps {
   onChange: (value: string) => void;
 }
 
-export const SearchBar = React.memo<SearchBarProps>(({ value, placeholder = 'Поиск по книгам', onChange }) => {
+export const SearchBar = React.memo<SearchBarProps>(({ value, placeholder = 'Search books', onChange }) => {
   const theme = useTheme();
   const [isFocused, setIsFocused] = useState(false);
   const scaleAnim = useRef(new Animated.Value(1)).current;

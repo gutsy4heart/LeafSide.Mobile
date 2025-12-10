@@ -10,11 +10,11 @@ import { useTheme } from '@/theme';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 const FIELDS = [
-  { key: 'firstName', label: 'Имя', secure: false },
-  { key: 'lastName', label: 'Фамилия', secure: false },
+  { key: 'firstName', label: 'First Name', secure: false },
+  { key: 'lastName', label: 'Last Name', secure: false },
   { key: 'email', label: 'Email', secure: false },
-  { key: 'phoneNumber', label: 'Телефон', secure: false },
-  { key: 'password', label: 'Пароль', secure: true },
+  { key: 'phoneNumber', label: 'Phone', secure: false },
+  { key: 'password', label: 'Password', secure: true },
 ] as const;
 
 export const RegisterScreen = () => {
@@ -37,7 +37,7 @@ export const RegisterScreen = () => {
       await signUp(form);
       navigation.navigate('Tabs');
     } catch (error) {
-      Alert.alert('Ошибка регистрации', (error as Error).message);
+      Alert.alert('Registration Error', (error as Error).message);
     } finally {
       setLoading(false);
     }
@@ -46,7 +46,7 @@ export const RegisterScreen = () => {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={[styles.heading, { color: theme.colors.textPrimary }]}>Регистрация</Text>
+        <Text style={[styles.heading, { color: theme.colors.textPrimary }]}>Sign Up</Text>
       {FIELDS.map((field) => (
         <View key={field.key}>
           <Text style={[styles.label, { color: theme.colors.textMuted }]}>{field.label}</Text>
@@ -63,11 +63,11 @@ export const RegisterScreen = () => {
           />
         </View>
       ))}
-      <PrimaryButton label="Создать аккаунт" onPress={submit} loading={loading} />
+      <PrimaryButton label="Create Account" onPress={submit} loading={loading} />
       <Text style={{ color: theme.colors.textSecondary, textAlign: 'center' }}>
-        Уже есть аккаунт?{' '}
+        Already have an account?{' '}
         <Text style={{ color: theme.colors.accent }} onPress={() => navigation.navigate('Login')}>
-          Войти
+          Sign In
         </Text>
       </Text>
       </ScrollView>

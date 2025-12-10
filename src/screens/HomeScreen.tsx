@@ -53,9 +53,9 @@ export const HomeScreen = () => {
       >
         <View style={styles.gap}>
         <HeroBanner
-          headline="LeafSide Library"
-          subheading="Премиальный магазин книг с неоновой эстетикой"
-          ctaLabel="Смотреть каталог"
+          headline="LeafSide Bookstore"
+          subheading="Premium bookstore with neon aesthetics"
+          ctaLabel="View Catalog"
           onCtaPress={() => {
             const tabNavigation = navigation.getParent();
             if (tabNavigation) {
@@ -66,8 +66,8 @@ export const HomeScreen = () => {
 
         <View>
           <SectionHeader
-            title="Подборка дня"
-            actionLabel="Смотреть все"
+            title="Featured Today"
+            actionLabel="View All"
             onActionPress={() => {
               const tabNavigation = navigation.getParent();
               if (tabNavigation) {
@@ -97,8 +97,8 @@ export const HomeScreen = () => {
 
         <View>
           <SectionHeader 
-            title="Новинки" 
-            actionLabel="Все новинки"
+            title="New Releases" 
+            actionLabel="All New"
             onActionPress={() => {
               const tabNavigation = navigation.getParent();
               if (tabNavigation) {
@@ -127,7 +127,7 @@ export const HomeScreen = () => {
         </View>
 
         <View>
-          <SectionHeader title="Популярное" />
+          <SectionHeader title="Trending" />
           {isLoading ? (
             <>
               <ShimmerBookCard />
