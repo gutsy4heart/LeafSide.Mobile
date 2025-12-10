@@ -29,26 +29,26 @@ export const FilterChip = React.memo<FilterChipProps>(({ label, selected, onPres
       ]}
       onPress={handlePress}
     >
-      {selected ? (
-        <LinearGradient
-          colors={[theme.colors.accent, theme.colors.accentMuted]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.gradient}
+      <LinearGradient
+        colors={
+          selected
+            ? [theme.colors.accent, theme.colors.accentMuted]
+            : [theme.colors.glassLight, theme.colors.glass]
+        }
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.gradient}
+      />
+      <View style={styles.labelContainer}>
+        <Text
+          style={[
+            styles.label,
+            { color: selected ? '#062016' : theme.colors.textPrimary },
+          ]}
         >
-          <Text style={[styles.label, { color: '#062016' }]}>{label}</Text>
-        </LinearGradient>
-      ) : (
-        <>
-          <LinearGradient
-            colors={[theme.colors.glassLight, theme.colors.glass]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.gradient}
-          />
-          <Text style={[styles.label, { color: theme.colors.textPrimary }]}>{label}</Text>
-        </>
-      )}
+          {label}
+        </Text>
+      </View>
     </Pressable>
   );
 }, (prevProps, nextProps) => {
@@ -63,8 +63,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 999,
     borderWidth: 1.5,
-    marginRight: 10,
-    marginBottom: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
@@ -76,14 +74,15 @@ const styles = StyleSheet.create({
   gradient: {
     ...StyleSheet.absoluteFillObject,
     borderRadius: 999,
-    zIndex: 0,
+  },
+  labelContainer: {
+    position: 'relative',
+    zIndex: 1,
   },
   label: {
     fontSize: 14,
     fontWeight: '600',
     letterSpacing: 0.2,
-    zIndex: 1,
-    position: 'relative',
   },
 });
 

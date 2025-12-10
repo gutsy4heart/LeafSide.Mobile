@@ -9,6 +9,7 @@ import { useBooks } from '@/hooks/useBooks';
 import { useBookFilters } from '@/hooks/useBookFilters';
 import { useCart } from '@/providers/CartProvider';
 import type { RootStackParamList } from '@/navigation/types';
+import type { Book } from '@/types/book';
 import { useTheme } from '@/theme';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -18,15 +19,15 @@ export const CatalogScreen = () => {
   const theme = useTheme();
   const { data: books = [], isLoading, error } = useBooks();
   const { addItem } = useCart();
-  const filters = useBookFilters(books);
+  const filters = useBookFilters(books as Book[]);
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   // Debug logging
   if (error) {
     console.error('[CatalogScreen] Error loading books:', error);
   }
-  if (books.length > 0) {
-    console.log('[CatalogScreen] Books loaded:', books.length);
+  if ((books as Book[]).length > 0) {
+    console.log('[CatalogScreen] Books loaded:', (books as Book[]).length);
   }
 
   return (
@@ -52,14 +53,18 @@ export const CatalogScreen = () => {
         <FlatList
           data={filters.filtered}
           keyExtractor={(item) => item.id}
+          numColumns={2}
+          columnWrapperStyle={styles.row}
           renderItem={({ item }) => (
-            <BookCard
-              book={item}
-              onPress={() => navigation.navigate('BookDetails', { bookId: item.id })}
-              onAddToCart={() => addItem(item)}
-            />
+            <View style={styles.gridItem}>
+              <BookCard
+                book={item}
+                onPress={() => navigation.navigate('BookDetails', { bookId: item.id })}
+                onAddToCart={() => addItem(item)}
+              />
+            </View>
           )}
-          contentContainerStyle={{ gap: 16, paddingBottom: 120 }}
+          contentContainerStyle={{ paddingBottom: 120 }}
           showsVerticalScrollIndicator={false}
         />
       )}
@@ -76,6 +81,16 @@ const styles = StyleSheet.create({
   chips: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    gap: 8,
+  },
+  row: {
+    justifyContent: 'space-between',
+    gap: 16,
+    marginBottom: 0,
+  },
+  gridItem: {
+    flex: 1,
+    maxWidth: '48%',
   },
 });
 
