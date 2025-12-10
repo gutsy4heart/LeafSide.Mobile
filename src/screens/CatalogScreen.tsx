@@ -86,11 +86,10 @@ const styles = StyleSheet.create({
   row: {
     justifyContent: 'space-between',
     gap: 16,
-    marginBottom: 0,
+    marginBottom: 16,
   },
   gridItem: {
-    flex: 1,
-    maxWidth: '48%',
+    width: '47.5%',
   },
 });
 

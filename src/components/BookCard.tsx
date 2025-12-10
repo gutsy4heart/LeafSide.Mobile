@@ -118,7 +118,7 @@ export const BookCard = React.memo<BookCardProps>(({ book, onPress, onAddToCart 
               style={styles.coverPlaceholder}
             >
               <View style={[styles.iconCircle, { backgroundColor: 'rgba(52, 211, 153, 0.15)' }]}>
-                <Feather name="book-open" size={42} color={theme.colors.accentLight} />
+                <Feather name="book-open" size={32} color={theme.colors.accentLight} />
               </View>
             </LinearGradient>
           )}
@@ -131,7 +131,7 @@ export const BookCard = React.memo<BookCardProps>(({ book, onPress, onAddToCart 
           
           {!isAvailable && (
             <View style={[styles.unavailableBadge, { backgroundColor: theme.colors.danger }]}>
-              <Feather name="x-circle" size={12} color="#fff" style={{ marginRight: 4 }} />
+              <Feather name="x-circle" size={10} color="#fff" style={{ marginRight: 3 }} />
               <Text style={styles.unavailableText}>Недоступна</Text>
             </View>
           )}
@@ -160,7 +160,7 @@ export const BookCard = React.memo<BookCardProps>(({ book, onPress, onAddToCart 
           </View>
 
           <Text style={[styles.author, { color: theme.colors.textMuted }]} numberOfLines={1}>
-            <Feather name="user" size={12} color={theme.colors.textMuted} /> {book.author}
+            <Feather name="user" size={10} color={theme.colors.textMuted} /> {book.author}
           </Text>
 
           {book.description && (
@@ -176,7 +176,7 @@ export const BookCard = React.memo<BookCardProps>(({ book, onPress, onAddToCart 
               </Text>
               {book.publishing && (
                 <View style={styles.publishingContainer}>
-                  <Feather name="book" size={10} color={theme.colors.textMuted} />
+                  <Feather name="book" size={9} color={theme.colors.textMuted} />
                   <Text style={[styles.publishing, { color: theme.colors.textMuted }]} numberOfLines={1}>
                     {book.publishing}
                   </Text>
@@ -201,7 +201,7 @@ export const BookCard = React.memo<BookCardProps>(({ book, onPress, onAddToCart 
                   end={{ x: 1, y: 1 }}
                   style={styles.addButtonGradient}
                 >
-                  <Feather name="plus" size={20} color="#0d1b2a" />
+                  <Feather name="plus" size={18} color="#0d1b2a" />
                 </LinearGradient>
               </Pressable>
             )}
@@ -223,29 +223,28 @@ BookCard.displayName = 'BookCard';
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 24,
-    borderWidth: 2,
+    borderRadius: 20,
+    borderWidth: 1.5,
     overflow: 'hidden',
-    marginBottom: 16,
+    marginBottom: 8,
     shadowColor: '#34d399',
-    shadowOffset: { width: 0, height: 8 },
-    shadowRadius: 24,
-    elevation: 12,
+    shadowOffset: { width: 0, height: 6 },
+    shadowRadius: 20,
+    elevation: 10,
     backgroundColor: 'rgba(15, 23, 42, 0.6)',
   },
   pressable: {
     width: '100%',
-    height: '100%',
   },
   glassOverlay: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: 22,
+    borderRadius: 18,
     zIndex: 0,
   },
   imageContainer: {
     position: 'relative',
     overflow: 'hidden',
-    height: 220,
+    height: 200,
     backgroundColor: '#0f172a',
   },
   cover: {
@@ -260,9 +259,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   iconCircle: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
@@ -274,111 +273,111 @@ const styles = StyleSheet.create({
   },
   unavailableBadge: {
     position: 'absolute',
-    top: 16,
-    right: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 24,
+    top: 10,
+    right: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
     zIndex: 2,
     flexDirection: 'row',
     alignItems: 'center',
     shadowColor: '#ef4444',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.6,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    elevation: 6,
   },
   unavailableText: {
     color: '#fff',
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: '800',
-    letterSpacing: 0.8,
+    letterSpacing: 0.5,
   },
   genreBadge: {
     position: 'absolute',
-    top: 16,
-    left: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 9,
-    borderRadius: 20,
-    borderWidth: 2,
+    top: 10,
+    left: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 14,
+    borderWidth: 1.5,
     zIndex: 2,
     shadowColor: '#34d399',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.6,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    elevation: 6,
   },
   genreText: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: '900',
-    letterSpacing: 1,
+    letterSpacing: 0.8,
     textTransform: 'uppercase',
   },
   content: {
-    padding: 18,
-    gap: 10,
+    padding: 12,
+    gap: 6,
     position: 'relative',
     zIndex: 1,
   },
   header: {
-    gap: 6,
+    gap: 4,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '900',
-    lineHeight: 24,
-    letterSpacing: -0.5,
+    fontSize: 15,
+    fontWeight: '800',
+    lineHeight: 20,
+    letterSpacing: -0.3,
   },
   author: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
-    opacity: 0.9,
-    marginTop: 2,
+    opacity: 0.85,
+    marginTop: 1,
   },
   description: {
-    fontSize: 13,
-    lineHeight: 19,
-    marginTop: 4,
-    opacity: 0.8,
+    fontSize: 11,
+    lineHeight: 16,
+    marginTop: 3,
+    opacity: 0.75,
   },
   footer: {
-    marginTop: 14,
+    marginTop: 8,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
   },
   priceContainer: {
     flex: 1,
-    gap: 6,
+    gap: 4,
   },
   price: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '900',
-    letterSpacing: -0.8,
+    letterSpacing: -0.6,
   },
   publishingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
   },
   publishing: {
-    fontSize: 11,
-    opacity: 0.75,
+    fontSize: 10,
+    opacity: 0.7,
     fontWeight: '600',
   },
   addButton: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    marginLeft: 12,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginLeft: 8,
     overflow: 'hidden',
     shadowColor: '#34d399',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.7,
-    shadowRadius: 16,
-    elevation: 10,
-    borderWidth: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.6,
+    shadowRadius: 12,
+    elevation: 8,
+    borderWidth: 1.5,
     borderColor: 'rgba(52, 211, 153, 0.3)',
   },
   addButtonGradient: {
