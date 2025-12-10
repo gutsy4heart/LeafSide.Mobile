@@ -11,16 +11,30 @@ export interface LoginResponse {
   token: string;
 }
 
-export const login = (payload: LoginPayload) =>
-  apiFetch<LoginResponse>('/api/account/login', {
+export const login = (payload: LoginPayload) => {
+  const requestBody = {
+    Email: payload.email,
+    Password: payload.password,
+  };
+  console.log('[AUTH] Login request body:', requestBody);
+  return apiFetch<LoginResponse>('/api/account/login', {
     method: 'POST',
-    body: payload,
+    body: requestBody,
   });
+};
 
 export const register = (payload: RegisterPayload) =>
   apiFetch<void>('/api/account/register', {
     method: 'POST',
-    body: payload,
+    body: {
+      Email: payload.email,
+      Password: payload.password,
+      FirstName: payload.firstName,
+      LastName: payload.lastName,
+      PhoneNumber: payload.phoneNumber,
+      CountryCode: payload.countryCode,
+      Gender: payload.gender,
+    },
   });
 
 export const getProfile = (token: string) =>
@@ -32,7 +46,13 @@ export const updateProfile = (token: string, payload: UpdateProfilePayload) =>
   apiFetch<UserProfile>('/api/account/profile', {
     method: 'PUT',
     token,
-    body: payload,
+    body: {
+      FirstName: payload.firstName,
+      LastName: payload.lastName,
+      PhoneNumber: payload.phoneNumber,
+      CountryCode: payload.countryCode,
+      Gender: payload.gender,
+    },
   });
 
 export const refreshToken = (token: string) =>
