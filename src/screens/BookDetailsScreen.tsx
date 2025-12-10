@@ -2,6 +2,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -30,7 +31,7 @@ export const BookDetailsScreen = () => {
 
   if (isLoading) {
     return (
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['top']}>
         <LinearGradient
           colors={[theme.colors.backgroundGradientStart, theme.colors.backgroundGradientEnd]}
           style={StyleSheet.absoluteFill}
@@ -49,13 +50,13 @@ export const BookDetailsScreen = () => {
             </View>
           </View>
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (error || !book) {
     return (
-      <View style={[styles.loader, { backgroundColor: theme.colors.background }]}>
+      <SafeAreaView style={[styles.loader, { backgroundColor: theme.colors.background }]} edges={['top']}>
         <LinearGradient
           colors={[theme.colors.backgroundGradientStart, theme.colors.backgroundGradientEnd]}
           style={StyleSheet.absoluteFill}
@@ -75,7 +76,7 @@ export const BookDetailsScreen = () => {
           </Text>
           <PrimaryButton label="Назад" onPress={() => navigation.goBack()} variant="glass" />
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
 
@@ -91,7 +92,7 @@ export const BookDetailsScreen = () => {
   ].filter((item) => item.value) as Array<{ icon: string; label: string; value: string }>;
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['top']}>
       <LinearGradient
         colors={[theme.colors.backgroundGradientStart, theme.colors.backgroundGradientEnd]}
         style={StyleSheet.absoluteFill}
@@ -238,7 +239,7 @@ export const BookDetailsScreen = () => {
           </View>
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 

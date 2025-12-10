@@ -1,6 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
 import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PrimaryButton } from '@/components/PrimaryButton';
 import type { RootStackParamList } from '@/navigation/types';
@@ -43,8 +44,9 @@ export const RegisterScreen = () => {
   };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]} contentContainerStyle={styles.content}>
-      <Text style={[styles.heading, { color: theme.colors.textPrimary }]}>Регистрация</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['top']}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <Text style={[styles.heading, { color: theme.colors.textPrimary }]}>Регистрация</Text>
       {FIELDS.map((field) => (
         <View key={field.key}>
           <Text style={[styles.label, { color: theme.colors.textMuted }]}>{field.label}</Text>
@@ -68,7 +70,8 @@ export const RegisterScreen = () => {
           Войти
         </Text>
       </Text>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 

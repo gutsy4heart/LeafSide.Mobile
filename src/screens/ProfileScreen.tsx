@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 
@@ -27,7 +28,7 @@ export const ProfileScreen = () => {
 
   if (status !== 'authenticated' || !profile) {
     return (
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['top']}>
         <LinearGradient
           colors={[theme.colors.backgroundGradientStart, theme.colors.backgroundGradientEnd]}
           style={StyleSheet.absoluteFill}
@@ -64,12 +65,12 @@ export const ProfileScreen = () => {
             </View>
           </View>
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['top']}>
       <LinearGradient
         colors={[theme.colors.backgroundGradientStart, theme.colors.backgroundGradientEnd]}
         style={StyleSheet.absoluteFill}
@@ -260,7 +261,7 @@ export const ProfileScreen = () => {
           />
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 

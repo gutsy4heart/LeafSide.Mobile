@@ -1,13 +1,12 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 
 import { BookCard } from '@/components/BookCard';
-import { FilterChip } from '@/components/FilterChip';
 import { HeroBanner } from '@/components/HeroBanner';
-import { SearchBar } from '@/components/SearchBar';
 import { SectionHeader } from '@/components/SectionHeader';
 import { ShimmerBookCard } from '@/components/ShimmerLoader';
 import { useBooks } from '@/hooks/useBooks';
@@ -19,8 +18,6 @@ import { useTheme } from '@/theme';
 import { formatCurrency } from '@/utils/format';
 import type { CompositeNavigationProp } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-
-const GENRES = ['All', 'Fiction', 'Fantasy', 'History', 'Business', 'Science Fiction', 'Other'];
 
 type HomeScreenNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList, 'Home'>,
@@ -45,16 +42,16 @@ export const HomeScreen = () => {
   const onBookPress = (book: { id: string }) => navigation.navigate('BookDetails', { bookId: book.id });
 
   return (
-    <ScrollView 
-      style={[styles.container, { backgroundColor: theme.colors.background }]} 
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-    >
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['top']}>
       <LinearGradient
         colors={[theme.colors.backgroundGradientStart, theme.colors.backgroundGradientEnd]}
         style={StyleSheet.absoluteFill}
       />
-      <View style={styles.gap}>
+      <ScrollView 
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.gap}>
         <HeroBanner
           headline="LeafSide Library"
           subheading="Премиальный магазин книг с неоновой эстетикой"
@@ -66,25 +63,6 @@ export const HomeScreen = () => {
             }
           }}
         />
-
-        <SearchBar value={filters.query} onChange={filters.setQuery} placeholder="Найти книгу или автора" />
-
-        <View>
-          <SectionHeader title="Жанры" />
-          <View style={styles.chips}>
-            {GENRES.map((genre) => {
-              const selected = genre === 'All' ? filters.genre === null : filters.genre === genre;
-              return (
-                <FilterChip
-                  key={genre}
-                  label={genre}
-                  selected={selected}
-                  onPress={() => filters.setGenre(genre === 'All' ? null : genre)}
-                />
-              );
-            })}
-          </View>
-        </View>
 
         <View>
           <SectionHeader
@@ -98,34 +76,65 @@ export const HomeScreen = () => {
             }}
           />
           {isLoading ? (
-            <View style={styles.grid}>
-              <View style={styles.gridItem}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
+              <View style={styles.horizontalCard}>
                 <ShimmerBookCard />
               </View>
-              <View style={styles.gridItem}>
+              <View style={styles.horizontalCard}>
                 <ShimmerBookCard />
               </View>
-            </View>
+            </ScrollView>
           ) : (
-            <View style={styles.grid}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
               {filters.featured.map((book) => (
-                <View key={book.id} style={styles.gridItem}>
+                <View key={book.id} style={styles.horizontalCard}>
                   <BookCard book={book} onPress={() => onBookPress({ id: book.id })} onAddToCart={() => addItem(book)} />
                 </View>
               ))}
-            </View>
+            </ScrollView>
           )}
         </View>
 
         <View>
-          <SectionHeader title="В тренде" />
+          <SectionHeader 
+            title="Новинки" 
+            actionLabel="Все новинки"
+            onActionPress={() => {
+              const tabNavigation = navigation.getParent();
+              if (tabNavigation) {
+                (tabNavigation as any).navigate('Catalog');
+              }
+            }}
+          />
+          {isLoading ? (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
+              <View style={styles.horizontalCard}>
+                <ShimmerBookCard />
+              </View>
+              <View style={styles.horizontalCard}>
+                <ShimmerBookCard />
+              </View>
+            </ScrollView>
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
+              {filters.trending.slice(0, 5).map((book) => (
+                <View key={book.id} style={styles.horizontalCard}>
+                  <BookCard book={book} onPress={() => onBookPress({ id: book.id })} onAddToCart={() => addItem(book)} />
+                </View>
+              ))}
+            </ScrollView>
+          )}
+        </View>
+
+        <View>
+          <SectionHeader title="Популярное" />
           {isLoading ? (
             <>
               <ShimmerBookCard />
               <ShimmerBookCard />
             </>
           ) : (
-            filters.trending.map((book) => (
+            filters.trending.slice(0, 3).map((book) => (
               <Pressable 
                 key={book.id}
                 onPress={() => onBookPress({ id: book.id })}
@@ -163,7 +172,8 @@ export const HomeScreen = () => {
           )}
         </View>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
@@ -177,12 +187,6 @@ const styles = StyleSheet.create({
   gap: {
     gap: 16,
   },
-  chips: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: 8,
-    gap: 8,
-  },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -191,6 +195,14 @@ const styles = StyleSheet.create({
   },
   gridItem: {
     width: '47.5%',
+  },
+  horizontalScroll: {
+    marginHorizontal: -16,
+    paddingHorizontal: 16,
+  },
+  horizontalCard: {
+    width: 280,
+    marginRight: 16,
   },
   trendingCard: {
     borderWidth: 1.5,

@@ -1,5 +1,8 @@
 import { useNavigation } from '@react-navigation/native';
-import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Feather } from '@expo/vector-icons';
 
 import { BookCard } from '@/components/BookCard';
 import { FilterChip } from '@/components/FilterChip';
@@ -31,9 +34,29 @@ export const CatalogScreen = () => {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <SearchBar value={filters.query} onChange={filters.setQuery} />
-      <SectionHeader title="Жанры" />
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['top']}>
+      <LinearGradient
+        colors={[theme.colors.backgroundGradientStart, theme.colors.backgroundGradientEnd]}
+        style={StyleSheet.absoluteFill}
+      />
+      
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={[styles.headerIcon, { backgroundColor: theme.colors.accentGlow }]}>
+          <Feather name="book-open" size={24} color={theme.colors.accent} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.heading, { color: theme.colors.textPrimary }]}>
+            Каталог книг
+          </Text>
+          <Text style={[styles.subheading, { color: theme.colors.textMuted }]}>
+            {(books as Book[]).length} книг в наличии
+          </Text>
+        </View>
+      </View>
+
+      <SearchBar value={filters.query} onChange={filters.setQuery} placeholder="Поиск по названию или автору" />
+      <SectionHeader title="Фильтр по жанрам" />
       <View style={styles.chips}>
         {POPULAR_GENRES.map((genre) => {
           const selected = genre === 'Все' ? filters.genre === null : filters.genre === genre;
@@ -68,20 +91,50 @@ export const CatalogScreen = () => {
           showsVerticalScrollIndicator={false}
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    gap: 16,
+    padding: 16,
+    gap: 12,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 8,
+    zIndex: 1,
+  },
+  headerIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#34d399',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  heading: {
+    fontSize: 26,
+    fontWeight: '900',
+    letterSpacing: -0.6,
+  },
+  subheading: {
+    fontSize: 13,
+    fontWeight: '600',
+    marginTop: 2,
   },
   chips: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
+    zIndex: 1,
   },
   row: {
     justifyContent: 'space-between',

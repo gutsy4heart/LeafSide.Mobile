@@ -1,6 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
 import { useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, View, Pressable } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { PrimaryButton } from '@/components/PrimaryButton';
@@ -54,7 +55,7 @@ export const LoginScreen = () => {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['top']}>
       <LinearGradient
         colors={[theme.colors.backgroundGradientStart, theme.colors.backgroundGradientEnd]}
         style={StyleSheet.absoluteFill}
@@ -82,7 +83,7 @@ export const LoginScreen = () => {
               style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.textPrimary, backgroundColor: theme.colors.glass }]}
               value={form[field]}
               onChangeText={(value) => setForm((prev) => ({ ...prev, [field]: value }))}
-              placeholder={field === 'email' ? 'admin@leafside.local' : 'Admin12345!'}
+              placeholder={field === 'email' ? 'murad.nurmammadli@gmail.com' : 'Qwerty123!'}
               placeholderTextColor={theme.colors.textMuted}
               secureTextEntry={field === 'password'}
               autoCapitalize="none"
@@ -98,7 +99,7 @@ export const LoginScreen = () => {
           </Text>
         </Text>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
