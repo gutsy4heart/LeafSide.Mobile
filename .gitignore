@@ -3,9 +3,24 @@
 node_modules/
 dist/
 web-build/
-android/
-ios/
+
+# Native folders (comment out if you want to track them)
+# android/
+# ios/
+
+# But always ignore these:
+android/local.properties
+android/.gradle/
+android/app/build/
+android/build/
+android/.cxx/
+android/.idea/
+ios/Pods/
+ios/build/
+
 *.log
 .env
 .env.local
+.env.android
+.env.device
 

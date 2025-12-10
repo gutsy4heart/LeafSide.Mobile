@@ -6,7 +6,11 @@
   "scripts": {
     "start": "expo start --clear",
     "android": "expo run:android",
+    "android:prebuild": "expo prebuild --platform android",
     "ios": "expo run:ios",
+    "ios:prebuild": "expo prebuild --platform ios",
+    "prebuild": "expo prebuild",
+    "prebuild:clean": "expo prebuild --clean",
     "web": "expo start --web",
     "lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0",
     "typecheck": "tsc --noEmit"

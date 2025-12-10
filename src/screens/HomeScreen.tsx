@@ -1,12 +1,15 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Feather } from '@expo/vector-icons';
 
 import { BookCard } from '@/components/BookCard';
 import { FilterChip } from '@/components/FilterChip';
 import { HeroBanner } from '@/components/HeroBanner';
 import { SearchBar } from '@/components/SearchBar';
 import { SectionHeader } from '@/components/SectionHeader';
+import { ShimmerBookCard } from '@/components/ShimmerLoader';
 import { useBooks } from '@/hooks/useBooks';
 import { useBookFilters } from '@/hooks/useBookFilters';
 import { useCart } from '@/providers/CartProvider';
@@ -17,7 +20,7 @@ import { formatCurrency } from '@/utils/format';
 import type { CompositeNavigationProp } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 
-const GENRES = ['Все', 'Fiction', 'Fantasy', 'History', 'Business', 'Science Fiction', 'Other'];
+const GENRES = ['All', 'Fiction', 'Fantasy', 'History', 'Business', 'Science Fiction', 'Other'];
 
 type HomeScreenNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList, 'Home'>,
@@ -42,14 +45,21 @@ export const HomeScreen = () => {
   const onBookPress = (book: { id: string }) => navigation.navigate('BookDetails', { bookId: book.id });
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]} contentContainerStyle={styles.content}>
+    <ScrollView 
+      style={[styles.container, { backgroundColor: theme.colors.background }]} 
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+    >
+      <LinearGradient
+        colors={[theme.colors.backgroundGradientStart, theme.colors.backgroundGradientEnd]}
+        style={StyleSheet.absoluteFill}
+      />
       <View style={styles.gap}>
         <HeroBanner
           headline="LeafSide Library"
-          subheading="Современный магазин с неоновой эстетикой и любимыми авторами."
-          ctaLabel="Каталог"
+          subheading="Премиальный магазин книг с неоновой эстетикой"
+          ctaLabel="Смотреть каталог"
           onCtaPress={() => {
-            // Navigate to Catalog tab
             const tabNavigation = navigation.getParent();
             if (tabNavigation) {
               (tabNavigation as any).navigate('Catalog');
@@ -63,13 +73,13 @@ export const HomeScreen = () => {
           <SectionHeader title="Жанры" />
           <View style={styles.chips}>
             {GENRES.map((genre) => {
-              const selected = genre === 'Все' ? filters.genre === null : filters.genre === genre;
+              const selected = genre === 'All' ? filters.genre === null : filters.genre === genre;
               return (
                 <FilterChip
                   key={genre}
                   label={genre}
                   selected={selected}
-                  onPress={() => filters.setGenre(genre === 'Все' ? null : genre)}
+                  onPress={() => filters.setGenre(genre === 'All' ? null : genre)}
                 />
               );
             })}
@@ -88,7 +98,14 @@ export const HomeScreen = () => {
             }}
           />
           {isLoading ? (
-            <ActivityIndicator color={theme.colors.accent} />
+            <View style={styles.grid}>
+              <View style={styles.gridItem}>
+                <ShimmerBookCard />
+              </View>
+              <View style={styles.gridItem}>
+                <ShimmerBookCard />
+              </View>
+            </View>
           ) : (
             <View style={styles.grid}>
               {filters.featured.map((book) => (
@@ -103,18 +120,45 @@ export const HomeScreen = () => {
         <View>
           <SectionHeader title="В тренде" />
           {isLoading ? (
-            <ActivityIndicator color={theme.colors.accent} />
+            <>
+              <ShimmerBookCard />
+              <ShimmerBookCard />
+            </>
           ) : (
             filters.trending.map((book) => (
-              <View key={book.id} style={[styles.trendingCard, { borderColor: theme.colors.border, backgroundColor: theme.colors.card }]}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.trendingTitle, { color: theme.colors.textPrimary }]}>{book.title}</Text>
-                  <Text style={{ color: theme.colors.textMuted }}>{book.author}</Text>
+              <Pressable 
+                key={book.id}
+                onPress={() => onBookPress({ id: book.id })}
+                style={({ pressed }) => [
+                  styles.trendingCard, 
+                  { 
+                    borderColor: theme.colors.borderLight,
+                    opacity: pressed ? 0.8 : 1,
+                    transform: [{ scale: pressed ? 0.98 : 1 }],
+                  }
+                ]}
+              >
+                <LinearGradient
+                  colors={[theme.colors.glassMedium, theme.colors.glassLight]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={StyleSheet.absoluteFill}
+                />
+                <View style={[styles.trendingIcon, { backgroundColor: theme.colors.accentGlow }]}>
+                  <Feather name="trending-up" size={20} color={theme.colors.accent} />
                 </View>
-                <Text style={{ color: theme.colors.accent, fontWeight: '700' }}>
+                <View style={{ flex: 1, zIndex: 1 }}>
+                  <Text style={[styles.trendingTitle, { color: theme.colors.textPrimary }]}>
+                    {book.title}
+                  </Text>
+                  <Text style={[styles.trendingAuthor, { color: theme.colors.textMuted }]}>
+                    {book.author}
+                  </Text>
+                </View>
+                <Text style={[styles.trendingPrice, { color: theme.colors.accentLight }]}>
                   {formatCurrency(book.price ?? null)}
                 </Text>
-              </View>
+              </Pressable>
             ))
           )}
         </View>
@@ -128,15 +172,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    padding: 20,
+    padding: 16,
   },
   gap: {
-    gap: 24,
+    gap: 16,
   },
   chips: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginTop: 12,
+    marginTop: 8,
   },
   grid: {
     flexDirection: 'row',
@@ -144,26 +188,48 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   gridItem: {
-    width: '48%',
+    width: '47.5%',
   },
   trendingCard: {
-    borderWidth: 1,
-    borderRadius: 20,
-    padding: 18,
-    marginBottom: 12,
+    borderWidth: 1.5,
+    borderRadius: 18,
+    padding: 14,
+    marginBottom: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
+    gap: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  trendingIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
   },
   trendingTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    letterSpacing: -0.2,
+    fontSize: 15,
+    fontWeight: '800',
+    letterSpacing: -0.3,
+    marginBottom: 3,
+  },
+  trendingAuthor: {
+    fontSize: 13,
+    fontWeight: '500',
+    opacity: 0.8,
+  },
+  trendingPrice: {
+    fontSize: 16,
+    fontWeight: '900',
+    letterSpacing: -0.5,
+    zIndex: 1,
   },
 });
 
