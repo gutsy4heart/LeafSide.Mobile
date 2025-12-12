@@ -16,6 +16,7 @@ interface BookCardProps {
 export const BookCard = React.memo<BookCardProps>(({ book, onPress, onAddToCart }) => {
   const theme = useTheme();
   const [imageError, setImageError] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
   const scaleAnim = useRef(new Animated.Value(1)).current;
   
   const handlePress = useCallback(() => {
@@ -46,24 +47,38 @@ export const BookCard = React.memo<BookCardProps>(({ book, onPress, onAddToCart 
     }).start();
   }, [scaleAnim]);
 
-  const handleAdd = useCallback(() => {
-    onAddToCart?.(book);
-    // Bounce animation on add
-    Animated.sequence([
-      Animated.spring(scaleAnim, {
-        toValue: 1.05,
-        useNativeDriver: true,
-        speed: 50,
-        bounciness: 12,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        useNativeDriver: true,
-        speed: 50,
-        bounciness: 12,
-      }),
-    ]).start();
-  }, [onAddToCart, book, scaleAnim]);
+  const handleAdd = useCallback(async () => {
+    if (isAdding) {
+      console.log('[BookCard] Ignoring double click for:', book.title);
+      return;
+    }
+    
+    setIsAdding(true);
+    console.log('[BookCard] Adding to cart:', book.title);
+    
+    try {
+      onAddToCart?.(book);
+      
+      // Bounce animation on add
+      Animated.sequence([
+        Animated.spring(scaleAnim, {
+          toValue: 1.05,
+          useNativeDriver: true,
+          speed: 50,
+          bounciness: 12,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          useNativeDriver: true,
+          speed: 50,
+          bounciness: 12,
+        }),
+      ]).start();
+    } finally {
+      // Reset after 1 second
+      setTimeout(() => setIsAdding(false), 1000);
+    }
+  }, [isAdding, onAddToCart, book, scaleAnim]);
 
   const hasImage = useMemo(() => 
     !imageError && book.imageUrl && book.imageUrl.trim() !== '', 
@@ -189,11 +204,12 @@ export const BookCard = React.memo<BookCardProps>(({ book, onPress, onAddToCart 
                 style={({ pressed }) => [
                   styles.addButton,
                   {
-                    opacity: pressed ? 0.8 : 1,
+                    opacity: isAdding ? 0.5 : (pressed ? 0.8 : 1),
                     transform: [{ scale: pressed ? 0.9 : 1 }],
                   },
                 ]}
                 onPress={handleAdd}
+                disabled={isAdding}
               >
                 <LinearGradient
                   colors={[theme.colors.accentLight, theme.colors.accent]}
@@ -201,7 +217,7 @@ export const BookCard = React.memo<BookCardProps>(({ book, onPress, onAddToCart 
                   end={{ x: 1, y: 1 }}
                   style={styles.addButtonGradient}
                 >
-                  <Feather name="plus" size={18} color="#0d1b2a" />
+                  <Feather name={isAdding ? "check" : "plus"} size={18} color="#0d1b2a" />
                 </LinearGradient>
               </Pressable>
             )}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -23,10 +23,21 @@ export const BookDetailsScreen = () => {
   const { params } = useRoute<Route>();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { addItem } = useCart();
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
   const { data: book, isLoading, error } = useQuery({
     queryKey: ['book', params.bookId],
-    queryFn: () => fetchBookById(params.bookId),
+    queryFn: async () => {
+      console.log('[BookDetailsScreen] Fetching book:', params.bookId);
+      try {
+        const result = await fetchBookById(params.bookId);
+        console.log('[BookDetailsScreen] Book fetched successfully:', result.title);
+        return result;
+      } catch (err) {
+        console.error('[BookDetailsScreen] Error fetching book:', err);
+        throw err;
+      }
+    },
   });
 
   if (isLoading) {
@@ -55,6 +66,7 @@ export const BookDetailsScreen = () => {
   }
 
   if (error || !book) {
+    console.error('[BookDetailsScreen] Error state:', { error, hasBook: !!book });
     return (
       <SafeAreaView style={[styles.loader, { backgroundColor: theme.colors.background }]} edges={['top']}>
         <LinearGradient
@@ -74,6 +86,11 @@ export const BookDetailsScreen = () => {
           <Text style={[styles.errorText, { color: theme.colors.textPrimary }]}>
             Failed to load book
           </Text>
+          {error && (
+            <Text style={[styles.errorDetails, { color: theme.colors.textMuted }]}>
+              {error instanceof Error ? error.message : 'Unknown error'}
+            </Text>
+          )}
           <PrimaryButton label="Go Back" onPress={() => navigation.goBack()} variant="glass" />
         </View>
       </SafeAreaView>
@@ -210,16 +227,26 @@ export const BookDetailsScreen = () => {
             {isAvailable ? (
               <View style={styles.actions}>
                 <PrimaryButton
-                  label="Add to Cart"
-                  onPress={() => {
-                    addItem(book);
-                    const tabNavigation = navigation.getParent();
-                    if (tabNavigation) {
-                      (tabNavigation as any).navigate('Tabs', { screen: 'Cart' });
+                  label={isAddingToCart ? "Adding..." : "Add to Cart"}
+                  onPress={async () => {
+                    if (isAddingToCart) return;
+                    
+                    console.log('[BookDetailsScreen] Adding to cart:', book.title);
+                    setIsAddingToCart(true);
+                    
+                    try {
+                      await addItem(book);
+                      const tabNavigation = navigation.getParent();
+                      if (tabNavigation) {
+                        (tabNavigation as any).navigate('Tabs', { screen: 'Cart' });
+                      }
+                    } finally {
+                      setTimeout(() => setIsAddingToCart(false), 1000);
                     }
                   }}
                   variant="primary"
-                  icon={<Feather name="shopping-cart" size={18} color="#0d1b2a" />}
+                  disabled={isAddingToCart}
+                  icon={<Feather name={isAddingToCart ? "check" : "shopping-cart"} size={18} color="#0d1b2a" />}
                 />
                 <PrimaryButton
                   variant="glass"
@@ -281,6 +308,12 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     textAlign: 'center',
+  },
+  errorDetails: {
+    fontSize: 14,
+    fontWeight: '500',
+    textAlign: 'center',
+    paddingHorizontal: 20,
   },
   content: {
     padding: 16,

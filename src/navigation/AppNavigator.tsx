@@ -6,6 +6,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { useTheme } from '@/theme';
 
+import { AdminScreen } from '@/screens/AdminScreen';
 import { CartScreen } from '@/screens/CartScreen';
 import { CatalogScreen } from '@/screens/CatalogScreen';
 import { CheckoutScreen } from '@/screens/CheckoutScreen';
@@ -95,6 +96,7 @@ export const AppNavigator = () => {
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="Checkout" component={CheckoutScreen} />
+        <Stack.Screen name="Admin" component={AdminScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

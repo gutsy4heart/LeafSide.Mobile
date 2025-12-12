@@ -4,7 +4,7 @@ import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, Tex
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import { EmptyState } from '@/components/EmptyState';
 import { PrimaryButton } from '@/components/PrimaryButton';
@@ -54,6 +54,18 @@ export const ProfileScreen = () => {
   });
 
   const isAdmin = profile?.roles?.includes('Admin') || false;
+
+  // Log admin status for debugging
+  useEffect(() => {
+    if (profile) {
+      console.log('[ProfileScreen] User roles check:', {
+        userEmail: profile.email,
+        roles: profile.roles,
+        isAdmin,
+        adminButtonVisible: isAdmin,
+      });
+    }
+  }, [profile, isAdmin]);
 
   const handleSaveProfile = async () => {
     try {
@@ -487,6 +499,88 @@ export const ProfileScreen = () => {
           </View>
         )}
 
+        {/* Statistics Section */}
+        {activeTab === 'profile' && (
+          <View style={[styles.contentCard, { borderColor: theme.colors.borderLight }]}>
+            <LinearGradient
+              colors={[theme.colors.glassMedium, theme.colors.glassLight]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.glassOverlay}
+            />
+            <View style={styles.statsHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Feather name="bar-chart-2" size={20} color={theme.colors.accent} />
+                <Text style={[styles.cardTitle, { color: theme.colors.textPrimary }]}>
+                  Statistics
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => refetchStats()}
+                disabled={statsFetching}
+                style={[styles.refreshButton, { backgroundColor: theme.colors.accentGlow }]}
+              >
+                <Feather 
+                  name="refresh-cw" 
+                  size={16} 
+                  color={theme.colors.accent}
+                  style={{ transform: [{ rotate: statsFetching ? '180deg' : '0deg' }] }}
+                />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.statsGrid}>
+              <View style={[styles.statBox, { borderColor: '#3B82F633', backgroundColor: '#3B82F611' }]}>
+                <View style={[styles.statIconContainer, { backgroundColor: '#3B82F633' }]}>
+                  <Feather name="package" size={18} color="#3B82F6" />
+                </View>
+                <Text style={[styles.statValue, { color: theme.colors.textPrimary }]}>
+                  {statsFetching ? '...' : stats?.totalOrders || 0}
+                </Text>
+                <Text style={[styles.statLabel, { color: theme.colors.textMuted }]}>
+                  Total Orders
+                </Text>
+              </View>
+
+              <View style={[styles.statBox, { borderColor: '#10B98133', backgroundColor: '#10B98111' }]}>
+                <View style={[styles.statIconContainer, { backgroundColor: '#10B98133' }]}>
+                  <Feather name="book" size={18} color="#10B981" />
+                </View>
+                <Text style={[styles.statValue, { color: theme.colors.textPrimary }]}>
+                  {statsFetching ? '...' : stats?.totalBooksPurchased || 0}
+                </Text>
+                <Text style={[styles.statLabel, { color: theme.colors.textMuted }]}>
+                  Books Purchased
+                </Text>
+              </View>
+
+              <View style={[styles.statBox, { borderColor: '#8B5CF633', backgroundColor: '#8B5CF611' }]}>
+                <View style={[styles.statIconContainer, { backgroundColor: '#8B5CF633' }]}>
+                  <Feather name="shopping-cart" size={18} color="#8B5CF6" />
+                </View>
+                <Text style={[styles.statValue, { color: theme.colors.textPrimary }]}>
+                  {statsFetching ? '...' : stats?.itemsInCart || 0}
+                </Text>
+                <Text style={[styles.statLabel, { color: theme.colors.textMuted }]}>
+                  Items in Cart
+                </Text>
+              </View>
+
+              <View style={[styles.statBox, { borderColor: '#F59E0B33', backgroundColor: '#F59E0B11' }]}>
+                <View style={[styles.statIconContainer, { backgroundColor: '#F59E0B33' }]}>
+                  <Feather name="heart" size={18} color="#F59E0B" />
+                </View>
+                <Text style={[styles.statValue, { color: theme.colors.textPrimary }]}>
+                  {statsFetching ? '...' : stats?.favoritesCount || 0}
+                </Text>
+                <Text style={[styles.statLabel, { color: theme.colors.textMuted }]}>
+                  Favorites
+                </Text>
+              </View>
+            </View>
+          </View>
+        )}
+
         {activeTab === 'orders' && (
           <View style={[styles.contentCard, { borderColor: theme.colors.borderLight }]}>
             <LinearGradient
@@ -574,18 +668,137 @@ export const ProfileScreen = () => {
         )}
 
         {activeTab === 'settings' && (
-          <View style={[styles.contentCard, { borderColor: theme.colors.borderLight }]}>
-            <LinearGradient
-              colors={[theme.colors.glassMedium, theme.colors.glassLight]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.glassOverlay}
-            />
-            <Text style={[styles.cardTitle, { color: theme.colors.textPrimary }]}>
-              Quick Actions
-            </Text>
+          <View>
+            {/* Notifications Section */}
+            <View style={[styles.contentCard, { borderColor: theme.colors.borderLight, marginBottom: 16 }]}>
+              <LinearGradient
+                colors={[theme.colors.glassMedium, theme.colors.glassLight]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.glassOverlay}
+              />
+              <View style={styles.cardHeader}>
+                <Feather name="bell" size={20} color={theme.colors.accent} />
+                <Text style={[styles.cardTitle, { color: theme.colors.textPrimary }]}>
+                  Notifications
+                </Text>
+              </View>
 
-            <View style={styles.settingsContainer}>
+              <View style={styles.notificationsList}>
+                <View style={[styles.notificationItem, { borderColor: theme.colors.borderLight }]}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.notificationTitle, { color: theme.colors.textPrimary }]}>
+                      Email Notifications
+                    </Text>
+                    <Text style={[styles.notificationSubtitle, { color: theme.colors.textMuted }]}>
+                      Receive updates via email
+                    </Text>
+                  </View>
+                  <View style={[styles.switchPlaceholder, { backgroundColor: theme.colors.borderLight }]}>
+                    <Text style={[styles.switchText, { color: theme.colors.textMuted }]}>Coming Soon</Text>
+                  </View>
+                </View>
+
+                <View style={[styles.notificationItem, { borderColor: theme.colors.borderLight }]}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.notificationTitle, { color: theme.colors.textPrimary }]}>
+                      SMS Notifications
+                    </Text>
+                    <Text style={[styles.notificationSubtitle, { color: theme.colors.textMuted }]}>
+                      Receive updates via SMS
+                    </Text>
+                  </View>
+                  <View style={[styles.switchPlaceholder, { backgroundColor: theme.colors.borderLight }]}>
+                    <Text style={[styles.switchText, { color: theme.colors.textMuted }]}>Coming Soon</Text>
+                  </View>
+                </View>
+
+                <View style={[styles.notificationItem, { borderColor: theme.colors.borderLight }]}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.notificationTitle, { color: theme.colors.textPrimary }]}>
+                      Push Notifications
+                    </Text>
+                    <Text style={[styles.notificationSubtitle, { color: theme.colors.textMuted }]}>
+                      Get instant updates on your device
+                    </Text>
+                  </View>
+                  <View style={[styles.switchPlaceholder, { backgroundColor: theme.colors.borderLight }]}>
+                    <Text style={[styles.switchText, { color: theme.colors.textMuted }]}>Coming Soon</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            {/* Security Section */}
+            <View style={[styles.contentCard, { borderColor: theme.colors.borderLight, marginBottom: 16 }]}>
+              <LinearGradient
+                colors={[theme.colors.glassMedium, theme.colors.glassLight]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.glassOverlay}
+              />
+              <View style={styles.cardHeader}>
+                <Feather name="lock" size={20} color={theme.colors.accent} />
+                <Text style={[styles.cardTitle, { color: theme.colors.textPrimary }]}>
+                  Security
+                </Text>
+              </View>
+
+              <View style={styles.settingsContainer}>
+                <TouchableOpacity
+                  style={[styles.settingItem, { borderColor: theme.colors.borderLight }]}
+                  onPress={() => Alert.alert('Coming Soon', 'Password change functionality will be available soon.')}
+                >
+                  <View style={[styles.settingIcon, { backgroundColor: '#3B82F633' }]}>
+                    <Feather name="key" size={20} color="#3B82F6" />
+                  </View>
+                  <View style={styles.settingContent}>
+                    <Text style={[styles.settingTitle, { color: theme.colors.textPrimary }]}>
+                      Change Password
+                    </Text>
+                    <Text style={[styles.settingSubtitle, { color: theme.colors.textSecondary }]}>
+                      Update your account password
+                    </Text>
+                  </View>
+                  <Feather name="chevron-right" size={20} color={theme.colors.textMuted} />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.settingItem, { borderColor: theme.colors.borderLight }]}
+                  onPress={() => Alert.alert('Coming Soon', 'Two-factor authentication will be available soon.')}
+                >
+                  <View style={[styles.settingIcon, { backgroundColor: '#10B98133' }]}>
+                    <Feather name="shield" size={20} color="#10B981" />
+                  </View>
+                  <View style={styles.settingContent}>
+                    <Text style={[styles.settingTitle, { color: theme.colors.textPrimary }]}>
+                      Two-Factor Authentication
+                    </Text>
+                    <Text style={[styles.settingSubtitle, { color: theme.colors.textSecondary }]}>
+                      Add an extra layer of security
+                    </Text>
+                  </View>
+                  <Feather name="chevron-right" size={20} color={theme.colors.textMuted} />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Quick Actions Section */}
+            <View style={[styles.contentCard, { borderColor: theme.colors.borderLight }]}>
+              <LinearGradient
+                colors={[theme.colors.glassMedium, theme.colors.glassLight]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.glassOverlay}
+              />
+              <View style={styles.cardHeader}>
+                <Feather name="zap" size={20} color={theme.colors.accent} />
+                <Text style={[styles.cardTitle, { color: theme.colors.textPrimary }]}>
+                  Quick Actions
+                </Text>
+              </View>
+
+              <View style={styles.settingsContainer}>
               <TouchableOpacity
                 style={[styles.settingItem, { borderColor: theme.colors.borderLight }]}
                 onPress={() => navigation.navigate('Cart')}
@@ -625,9 +838,7 @@ export const ProfileScreen = () => {
               {isAdmin && (
                 <TouchableOpacity
                   style={[styles.settingItem, { borderColor: '#FFA50033' }]}
-                  onPress={() => {
-                    Alert.alert('Admin Panel', 'Admin panel is not available in mobile app yet.');
-                  }}
+                  onPress={() => navigation.navigate('Admin')}
                 >
                   <View style={[styles.settingIcon, { backgroundColor: '#FFA50033' }]}>
                     <Feather name="shield" size={20} color="#FFA500" />
@@ -670,6 +881,7 @@ export const ProfileScreen = () => {
                 </View>
                 <Feather name="chevron-right" size={20} color="#EF4444" />
               </TouchableOpacity>
+            </View>
             </View>
           </View>
         )}
@@ -1123,5 +1335,72 @@ const styles = StyleSheet.create({
   settingSubtitle: {
     fontSize: 13,
     fontWeight: '500',
+  },
+  notificationsList: {
+    gap: 12,
+    marginTop: 16,
+    zIndex: 1,
+  },
+  notificationItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 14,
+    borderRadius: 16,
+    borderWidth: 1.5,
+  },
+  notificationTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  notificationSubtitle: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  switchPlaceholder: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  switchText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  statsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+    zIndex: 1,
+  },
+  refreshButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    zIndex: 1,
+  },
+  statBox: {
+    flex: 1,
+    minWidth: '47%',
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    gap: 8,
+  },
+  statIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

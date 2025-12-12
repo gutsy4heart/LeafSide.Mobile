@@ -4,6 +4,7 @@ export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   Checkout: undefined;
+  Admin: undefined;
 };
 
 export type TabParamList = {

@@ -41,17 +41,31 @@ const initialCart: CartState = {
 };
 
 const enrichItems = async (payload: CartResponse): Promise<CartItem[]> => {
+  console.log('[CartProvider] enrichItems: Starting enrichment for', payload.items.length, 'items');
+  
   const items = await Promise.all(
     payload.items.map(async (item) => {
       try {
+        console.log('[CartProvider] Fetching book:', item.bookId);
         const book = await fetchBookById(item.bookId);
+        console.log('[CartProvider] Book fetched:', { 
+          bookId: item.bookId, 
+          title: book.title,
+          author: book.author,
+          imageUrl: book.imageUrl 
+        });
         return { ...item, book };
-      } catch {
+      } catch (error) {
+        console.error('[CartProvider] Failed to fetch book:', item.bookId, error);
         return { ...item };
       }
     }),
   );
 
+  const itemsWithBooks = items.filter(i => 'book' in i && i.book).length;
+  console.log('[CartProvider] enrichItems: Completed. Items with books:', 
+    itemsWithBooks, '/', items.length);
+  
   return items;
 };
 
@@ -65,7 +79,7 @@ export const CartProvider = ({ children }: PropsWithChildren) => {
       const stored = await AsyncStorage.getItem(LOCAL_CART_KEY);
       if (stored) {
         const parsed: CartState = JSON.parse(stored);
-        setCart({ ...parsed, source: 'local' });
+        setCart({ ...parsed, source: 'local' as const });
       } else {
         setCart(initialCart);
       }
@@ -92,7 +106,7 @@ export const CartProvider = ({ children }: PropsWithChildren) => {
         id: response.id,
         items: populated,
         updatedAt: new Date().toISOString(),
-        source: 'remote',
+        source: 'remote' as const,
       });
     } catch {
       // ignore network errors and keep previous cart snapshot
@@ -119,6 +133,8 @@ export const CartProvider = ({ children }: PropsWithChildren) => {
 
   const addItem = useCallback(
     async (book: Book, quantity = 1) => {
+      console.log('[CartProvider] addItem called:', { bookId: book.id, quantity, bookTitle: book.title });
+      
       if (!token) {
         setCart((current) => {
           const existing = current.items.find((item) => item.bookId === book.id);
@@ -127,7 +143,7 @@ export const CartProvider = ({ children }: PropsWithChildren) => {
                 item.bookId === book.id ? { ...item, quantity: item.quantity + quantity } : item,
               )
             : [...current.items, { bookId: book.id, quantity, book }];
-          const nextCart = { ...current, items: nextItems, source: 'local' };
+          const nextCart: CartState = { ...current, items: nextItems, source: 'local' as const };
           persistLocalCart(nextCart);
           return nextCart;
         });
@@ -138,13 +154,36 @@ export const CartProvider = ({ children }: PropsWithChildren) => {
       try {
         const existing = cart.items.find((item) => item.bookId === book.id);
         const desiredQuantity = existing ? existing.quantity + quantity : quantity;
+        
+        console.log('[CartProvider] Sending to server:', { 
+          bookId: book.id, 
+          existingQuantity: existing?.quantity || 0,
+          quantityToAdd: quantity,
+          desiredQuantity 
+        });
+        
         const response = await addOrUpdateCartItem(token, book.id, desiredQuantity);
+        
+        console.log('[CartProvider] Server response:', { 
+          cartId: response.id, 
+          itemsCount: response.items.length,
+          items: response.items.map(i => ({ bookId: i.bookId, quantity: i.quantity }))
+        });
+        
         const populated = await enrichItems(response);
+        
+        console.log('[CartProvider] Enriched items:', populated.map(i => ({ 
+          bookId: i.bookId, 
+          quantity: i.quantity, 
+          hasBook: !!i.book,
+          bookTitle: i.book?.title 
+        })));
+        
         setCart({
           id: response.id,
           items: populated,
           updatedAt: new Date().toISOString(),
-          source: 'remote',
+          source: 'remote' as const,
         });
       } finally {
         setIsSyncing(false);
@@ -155,9 +194,15 @@ export const CartProvider = ({ children }: PropsWithChildren) => {
 
   const removeItem = useCallback(
     async (bookId: string) => {
+      console.log('[CartProvider] removeItem called:', { bookId });
+      
       if (!token) {
         setCart((current) => {
-          const nextCart = { ...current, items: current.items.filter((item) => item.bookId !== bookId) };
+          const nextCart: CartState = { 
+            ...current, 
+            items: current.items.filter((item) => item.bookId !== bookId),
+            source: 'local' as const 
+          };
           persistLocalCart(nextCart);
           return nextCart;
         });
@@ -166,8 +211,18 @@ export const CartProvider = ({ children }: PropsWithChildren) => {
 
       setIsSyncing(true);
       try {
+        console.log('[CartProvider] Removing item from server:', bookId);
         await removeCartItem(token, bookId);
+        
+        // Обновляем локальное состояние немедленно для лучшего UX
+        setCart((current) => ({
+          ...current,
+          items: current.items.filter((item) => item.bookId !== bookId),
+        }));
+        
+        // Затем синхронизируем с сервером
         await loadRemoteCart();
+        console.log('[CartProvider] Item removed and cart reloaded');
       } finally {
         setIsSyncing(false);
       }

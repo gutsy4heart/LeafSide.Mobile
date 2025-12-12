@@ -57,10 +57,8 @@ export const HomeScreen = () => {
           subheading="Premium bookstore with neon aesthetics"
           ctaLabel="View Catalog"
           onCtaPress={() => {
-            const tabNavigation = navigation.getParent();
-            if (tabNavigation) {
-              (tabNavigation as any).navigate('Catalog');
-            }
+            console.log('[HomeScreen] Featured -> Navigating to Catalog');
+            navigation.navigate('Catalog');
           }}
         />
 
@@ -69,10 +67,8 @@ export const HomeScreen = () => {
             title="Featured Today"
             actionLabel="View All"
             onActionPress={() => {
-              const tabNavigation = navigation.getParent();
-              if (tabNavigation) {
-                (tabNavigation as any).navigate('Catalog');
-              }
+              console.log('[HomeScreen] Featured -> Navigating to Catalog');
+              navigation.navigate('Catalog');
             }}
           />
           {isLoading ? (
@@ -100,10 +96,8 @@ export const HomeScreen = () => {
             title="New Releases" 
             actionLabel="All New"
             onActionPress={() => {
-              const tabNavigation = navigation.getParent();
-              if (tabNavigation) {
-                (tabNavigation as any).navigate('Catalog');
-              }
+              console.log('[HomeScreen] New Releases -> Navigating to Catalog');
+              navigation.navigate('Catalog');
             }}
           />
           {isLoading ? (

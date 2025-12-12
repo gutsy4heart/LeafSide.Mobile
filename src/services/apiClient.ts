@@ -23,15 +23,12 @@ const buildUrl = (path: string) => {
   const baseUrl = getApiBaseUrl();
   const normalized = path.startsWith('/') ? path : `/${path}`;
   const fullUrl = `${baseUrl}${normalized}`;
-  console.log('[API] Building URL:', { baseUrl, path, fullUrl });
   return fullUrl;
 };
 
 export async function apiFetch<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
   const { method = 'GET', body, token, headers, signal } = options;
   const url = buildUrl(path);
-  
-  console.log(`[API] ${method} ${url}`);
   
   try {
     const response = await fetch(url, {
@@ -56,15 +53,32 @@ export async function apiFetch<T>(path: string, options: ApiRequestOptions = {})
     }
 
     if (!response.ok) {
-      console.error(`[API] Error ${response.status}:`, payload);
+      // Better error message extraction
+      let errorMessage = 'LeafSide API request failed';
+      if (typeof payload === 'string') {
+        errorMessage = payload;
+      } else if (payload && typeof payload === 'object') {
+        if (Array.isArray(payload)) {
+          // Identity errors format
+          errorMessage = payload.map((e: any) => e.description || e.code || JSON.stringify(e)).join('\n');
+        } else if ('error' in payload) {
+          errorMessage = (payload as any).error;
+        } else if ('message' in payload) {
+          errorMessage = (payload as any).message;
+        }
+      }
+      
       throw new LeafSideApiError(
-        typeof payload === 'string' ? payload : 'LeafSide API request failed',
+        errorMessage,
         response.status,
         payload,
       );
     }
 
-    console.log(`[API] Success:`, Array.isArray(payload) ? `${payload.length} items` : 'OK');
+    // Handle empty response (void)
+    if (payload === null || payload === '') {
+      return undefined as T;
+    }
     return payload as T;
   } catch (error) {
     if (error instanceof LeafSideApiError) {

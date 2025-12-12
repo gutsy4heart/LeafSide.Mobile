@@ -16,26 +16,26 @@ export const login = (payload: LoginPayload) => {
     Email: payload.email,
     Password: payload.password,
   };
-  console.log('[AUTH] Login request body:', requestBody);
   return apiFetch<LoginResponse>('/api/account/login', {
     method: 'POST',
     body: requestBody,
   });
 };
 
-export const register = (payload: RegisterPayload) => {
-  console.log('[AUTH] Register request payload:', payload);
+export const register = async (payload: RegisterPayload) => {
+  const requestBody = {
+    Email: payload.email,
+    Password: payload.password,
+    FirstName: payload.firstName,
+    LastName: payload.lastName,
+    PhoneNumber: payload.phoneNumber,
+    CountryCode: payload.countryCode,
+    Gender: payload.gender,
+  };
+  
   return apiFetch<void>('/api/account/register', {
     method: 'POST',
-    body: {
-      Email: payload.email,
-      Password: payload.password,
-      FirstName: payload.firstName,
-      LastName: payload.lastName,
-      PhoneNumber: payload.phoneNumber,
-      CountryCode: payload.countryCode,
-      Gender: payload.gender,
-    },
+    body: requestBody,
   });
 };
 

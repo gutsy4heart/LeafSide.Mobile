@@ -1,5 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Alert, Dimensions, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -68,6 +68,14 @@ export const RegisterScreen = () => {
   const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
   const [countrySearch, setCountrySearch] = useState('');
+  
+  // Use ref to always have latest form state
+  const formRef = useRef(form);
+  
+  // Update ref when form changes
+  useEffect(() => {
+    formRef.current = form;
+  }, [form]);
 
   const validateForm = () => {
     const errors: {[key: string]: string} = {};
@@ -93,35 +101,68 @@ export const RegisterScreen = () => {
   };
 
   const submit = async () => {
-    console.log('[RegisterScreen] Submit started, form data:', form);
+    // Use ref to get latest form state (avoid stale closure)
+    const currentForm = formRef.current;
+    const formToValidate = currentForm;
     
-    if (!validateForm()) {
-      console.log('[RegisterScreen] Validation failed');
+    // Validate using ref form
+    const errors: {[key: string]: string} = {};
+    if (!formToValidate.firstName.trim()) errors.firstName = 'First name is required';
+    if (!formToValidate.lastName.trim()) errors.lastName = 'Last name is required';
+    if (!formToValidate.email.trim()) errors.email = 'Email is required';
+    else if (!/\S+@\S+\.\S+/.test(formToValidate.email)) errors.email = 'Invalid email format';
+    if (!formToValidate.phoneNumber.trim()) errors.phoneNumber = 'Phone number is required';
+    else if (!/^\d{10,15}$/.test(formToValidate.phoneNumber.replace(/\D/g, ''))) errors.phoneNumber = 'Invalid phone number';
+    if (!formToValidate.gender) errors.gender = 'Gender is required';
+    if (!formToValidate.password) errors.password = 'Password is required';
+    else if (formToValidate.password.length < 6) errors.password = 'Password must be at least 6 characters';
+    
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
       Alert.alert('Validation Error', 'Please fill in all required fields correctly');
       return;
     }
 
-    console.log('[RegisterScreen] Validation passed, submitting...');
-
     try {
       setLoading(true);
-      // Get phone code from selected country
-      const selectedCountry = COUNTRY_CODES.find(c => c.code === form.countryCode);
-      const phoneCode = selectedCountry?.phoneCode || '+7';
       
+      // Prepare payload with all required fields from ref
       const payload = {
-        ...form,
-        countryCode: form.countryCode,
-        phoneNumber: form.phoneNumber,
+        email: formToValidate.email.trim(),
+        password: formToValidate.password,
+        firstName: formToValidate.firstName.trim(),
+        lastName: formToValidate.lastName.trim(),
+        phoneNumber: formToValidate.phoneNumber.trim(),
+        countryCode: formToValidate.countryCode,
+        gender: formToValidate.gender as 'Male' | 'Female' | 'Other',
       };
       
-      console.log('[RegisterScreen] Submitting payload:', payload);
       await signUp(payload);
-      console.log('[RegisterScreen] Registration successful');
       navigation.navigate('Tabs');
-    } catch (error) {
-      console.error('[RegisterScreen] Registration error:', error);
-      Alert.alert('Registration Error', (error as Error).message);
+    } catch (error: any) {
+      // Parse error message
+      let errorMessage = 'Registration failed. Please try again.';
+      
+      if (error?.payload) {
+        if (Array.isArray(error.payload)) {
+          // Identity errors format: [{ code: "...", description: "..." }]
+          const messages = error.payload.map((e: any) => 
+            e.description || e.code || JSON.stringify(e)
+          );
+          errorMessage = messages.length > 0 ? messages.join('\n') : errorMessage;
+        } else if (typeof error.payload === 'string') {
+          errorMessage = error.payload;
+        } else if (error.payload.errors && Array.isArray(error.payload.errors)) {
+          // Alternative format: { errors: [...] }
+          errorMessage = error.payload.errors.join('\n');
+        } else if (error.payload.error) {
+          errorMessage = error.payload.error;
+        }
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      Alert.alert('Registration Error', errorMessage);
     } finally {
       setLoading(false);
     }

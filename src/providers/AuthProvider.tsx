@@ -100,8 +100,16 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
   const signUp = useCallback(
     async (payload: RegisterPayload) => {
-      await register(payload);
-      await signIn({ email: payload.email, password: payload.password });
+      try {
+        await register(payload);
+        await signIn({ email: payload.email, password: payload.password });
+      } catch (error: any) {
+        // Re-throw with more context
+        if (error instanceof Error) {
+          throw error;
+        }
+        throw new Error(error?.message || 'Registration failed');
+      }
     },
     [signIn],
   );

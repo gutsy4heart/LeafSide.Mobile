@@ -18,11 +18,11 @@ export interface LoginPayload {
 export interface RegisterPayload {
   email: string;
   password: string;
-  firstName?: string;
-  lastName?: string;
-  phoneNumber?: string;
-  countryCode?: string;
-  gender?: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  countryCode: string;
+  gender: 'Male' | 'Female' | 'Other';
 }
 
 export interface UpdateProfilePayload {
