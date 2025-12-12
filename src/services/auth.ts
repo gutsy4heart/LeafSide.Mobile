@@ -23,8 +23,9 @@ export const login = (payload: LoginPayload) => {
   });
 };
 
-export const register = (payload: RegisterPayload) =>
-  apiFetch<void>('/api/account/register', {
+export const register = (payload: RegisterPayload) => {
+  console.log('[AUTH] Register request payload:', payload);
+  return apiFetch<void>('/api/account/register', {
     method: 'POST',
     body: {
       Email: payload.email,
@@ -36,6 +37,7 @@ export const register = (payload: RegisterPayload) =>
       Gender: payload.gender,
     },
   });
+};
 
 export const getProfile = (token: string) =>
   apiFetch<UserProfile>('/api/account/profile', {
@@ -59,5 +61,17 @@ export const refreshToken = (token: string) =>
   apiFetch<LoginResponse>('/api/account/refresh', {
     method: 'POST',
     body: { token },
+  });
+
+export interface UserStats {
+  totalOrders: number;
+  totalBooksPurchased: number;
+  itemsInCart: number;
+  favoritesCount: number;
+}
+
+export const getUserStats = (token: string) =>
+  apiFetch<UserStats>('/api/UserStats/stats', {
+    token,
   });
 

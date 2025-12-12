@@ -1,30 +1,80 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
+import { useState } from 'react';
 
 import { EmptyState } from '@/components/EmptyState';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { ShimmerLoader } from '@/components/ShimmerLoader';
-import type { RootStackParamList } from '@/navigation/types';
+import type { RootStackParamList, TabParamList } from '@/navigation/types';
 import { useAuth } from '@/providers/AuthProvider';
 import { fetchOrders } from '@/services/orders';
+import { getUserStats } from '@/services/auth';
 import { useTheme } from '@/theme';
 import { formatCurrency } from '@/utils/format';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { CompositeNavigationProp } from '@react-navigation/native';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+
+type Tab = 'profile' | 'orders' | 'settings';
+
+type ProfileScreenNavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<TabParamList, 'Profile'>,
+  NativeStackNavigationProp<RootStackParamList>
+>;
 
 export const ProfileScreen = () => {
   const theme = useTheme();
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { token, profile, status, signOut } = useAuth();
+  const navigation = useNavigation<ProfileScreenNavigationProp>();
+  const { token, profile, status, signOut, refreshProfile, updateProfile } = useAuth();
+  
+  const [activeTab, setActiveTab] = useState<Tab>('profile');
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedProfile, setEditedProfile] = useState({
+    firstName: profile?.firstName || '',
+    lastName: profile?.lastName || '',
+    phoneNumber: profile?.phoneNumber || '',
+    countryCode: profile?.countryCode || '+7',
+    gender: profile?.gender || 'Male',
+  });
 
-  const { data: orders = [], isFetching } = useQuery({
+  const { data: orders = [], isFetching: ordersFetching } = useQuery({
     queryKey: ['orders', token],
     queryFn: () => fetchOrders(token!),
     enabled: Boolean(token),
   });
+
+  const { data: stats, isFetching: statsFetching, refetch: refetchStats } = useQuery({
+    queryKey: ['user-stats', token],
+    queryFn: () => getUserStats(token!),
+    enabled: Boolean(token),
+  });
+
+  const isAdmin = profile?.roles?.includes('Admin') || false;
+
+  const handleSaveProfile = async () => {
+    try {
+      await updateProfile(editedProfile);
+      setIsEditing(false);
+      Alert.alert('Success', 'Profile updated successfully!');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to update profile. Please try again.');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditedProfile({
+      firstName: profile?.firstName || '',
+      lastName: profile?.lastName || '',
+      phoneNumber: profile?.phoneNumber || '',
+      countryCode: profile?.countryCode || '+7',
+      gender: profile?.gender || 'Male',
+    });
+    setIsEditing(false);
+  };
 
   if (status !== 'authenticated' || !profile) {
     return (
@@ -79,7 +129,7 @@ export const ProfileScreen = () => {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {/* Profile Header */}
+        {/* Profile Header with Avatar */}
         <View style={[styles.profileHeader, { borderColor: theme.colors.borderAccent }]}>
           <LinearGradient
             colors={[theme.colors.glassMedium, theme.colors.glassLight, theme.colors.glass]}
@@ -98,6 +148,11 @@ export const ProfileScreen = () => {
                 {(profile.firstName?.[0] || profile.email?.[0] || 'U').toUpperCase()}
               </Text>
             </LinearGradient>
+            {isAdmin && (
+              <View style={styles.adminBadgeContainer}>
+                <Text style={styles.adminBadge}>👑</Text>
+              </View>
+            )}
           </View>
           <View style={{ flex: 1, zIndex: 1 }}>
             <Text style={[styles.profileName, { color: theme.colors.textPrimary }]}>
@@ -111,11 +166,10 @@ export const ProfileScreen = () => {
                 {profile.email}
               </Text>
             </View>
-            {profile.phoneNumber && (
-              <View style={styles.phoneContainer}>
-                <Feather name="phone" size={14} color={theme.colors.textMuted} />
-                <Text style={[styles.profilePhone, { color: theme.colors.textMuted }]}>
-                  {profile.phoneNumber}
+            {isAdmin && (
+              <View style={styles.roleContainer}>
+                <Text style={[styles.roleBadge, { backgroundColor: '#FFA50033', color: '#FFA500' }]}>
+                  Administrator
                 </Text>
               </View>
             )}
@@ -131,11 +185,11 @@ export const ProfileScreen = () => {
               end={{ x: 1, y: 1 }}
               style={styles.glassOverlay}
             />
-            <View style={[styles.statIcon, { backgroundColor: theme.colors.accentGlow }]}>
-              <Feather name="package" size={24} color={theme.colors.accent} />
+            <View style={[styles.statIcon, { backgroundColor: '#3B82F633' }]}>
+              <Feather name="package" size={24} color="#3B82F6" />
             </View>
             <Text style={[styles.statValue, { color: theme.colors.textPrimary }]}>
-              {orders.length}
+              {statsFetching ? '...' : (stats?.totalOrders ?? 0)}
             </Text>
             <Text style={[styles.statLabel, { color: theme.colors.textMuted }]}>
               Orders
@@ -149,117 +203,476 @@ export const ProfileScreen = () => {
               end={{ x: 1, y: 1 }}
               style={styles.glassOverlay}
             />
-            <View style={[styles.statIcon, { backgroundColor: theme.colors.accentGlow }]}>
-              <Feather name="shopping-bag" size={24} color={theme.colors.accent} />
+            <View style={[styles.statIcon, { backgroundColor: '#10B98133' }]}>
+              <Feather name="book" size={24} color="#10B981" />
             </View>
             <Text style={[styles.statValue, { color: theme.colors.textPrimary }]}>
-              {orders.reduce((sum, order) => sum + order.items.length, 0)}
+              {statsFetching ? '...' : (stats?.totalBooksPurchased ?? 0)}
             </Text>
             <Text style={[styles.statLabel, { color: theme.colors.textMuted }]}>
-              Items
+              Books
+            </Text>
+          </View>
+
+          <View style={[styles.statCard, { borderColor: theme.colors.borderLight }]}>
+            <LinearGradient
+              colors={[theme.colors.glassLight, theme.colors.glass]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.glassOverlay}
+            />
+            <View style={[styles.statIcon, { backgroundColor: '#8B5CF633' }]}>
+              <Feather name="shopping-cart" size={24} color="#8B5CF6" />
+            </View>
+            <Text style={[styles.statValue, { color: theme.colors.textPrimary }]}>
+              {statsFetching ? '...' : (stats?.itemsInCart ?? 0)}
+            </Text>
+            <Text style={[styles.statLabel, { color: theme.colors.textMuted }]}>
+              In Cart
             </Text>
           </View>
         </View>
 
-        {/* Orders Section */}
-        <View style={styles.ordersSection}>
-          <View style={styles.sectionHeader}>
-            <View style={[styles.sectionIcon, { backgroundColor: theme.colors.accentGlow }]}>
-              <Feather name="list" size={20} color={theme.colors.accent} />
+        {/* Tab Navigation */}
+        <View style={styles.tabsContainer}>
+          <TouchableOpacity
+            style={[
+              styles.tab,
+              { borderColor: theme.colors.borderLight },
+              activeTab === 'profile' && { borderColor: theme.colors.accent, backgroundColor: theme.colors.accentGlow }
+            ]}
+            onPress={() => setActiveTab('profile')}
+          >
+            <Feather 
+              name="user" 
+              size={20} 
+              color={activeTab === 'profile' ? theme.colors.accent : theme.colors.textMuted} 
+            />
+            <Text style={[
+              styles.tabText,
+              { color: activeTab === 'profile' ? theme.colors.accent : theme.colors.textMuted }
+            ]}>
+              Profile
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.tab,
+              { borderColor: theme.colors.borderLight },
+              activeTab === 'orders' && { borderColor: theme.colors.accent, backgroundColor: theme.colors.accentGlow }
+            ]}
+            onPress={() => setActiveTab('orders')}
+          >
+            <Feather 
+              name="package" 
+              size={20} 
+              color={activeTab === 'orders' ? theme.colors.accent : theme.colors.textMuted} 
+            />
+            <Text style={[
+              styles.tabText,
+              { color: activeTab === 'orders' ? theme.colors.accent : theme.colors.textMuted }
+            ]}>
+              Orders
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.tab,
+              { borderColor: theme.colors.borderLight },
+              activeTab === 'settings' && { borderColor: theme.colors.accent, backgroundColor: theme.colors.accentGlow }
+            ]}
+            onPress={() => setActiveTab('settings')}
+          >
+            <Feather 
+              name="settings" 
+              size={20} 
+              color={activeTab === 'settings' ? theme.colors.accent : theme.colors.textMuted} 
+            />
+            <Text style={[
+              styles.tabText,
+              { color: activeTab === 'settings' ? theme.colors.accent : theme.colors.textMuted }
+            ]}>
+              Settings
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Tab Content */}
+        {activeTab === 'profile' && (
+          <View style={[styles.contentCard, { borderColor: theme.colors.borderLight }]}>
+            <LinearGradient
+              colors={[theme.colors.glassMedium, theme.colors.glassLight]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.glassOverlay}
+            />
+            <View style={styles.cardHeader}>
+              <Text style={[styles.cardTitle, { color: theme.colors.textPrimary }]}>
+                Personal Information
+              </Text>
+              <TouchableOpacity
+                onPress={() => isEditing ? handleSaveProfile() : setIsEditing(true)}
+                style={[styles.editButton, { backgroundColor: theme.colors.accentGlow }]}
+              >
+                <Feather 
+                  name={isEditing ? "check" : "edit-2"} 
+                  size={16} 
+                  color={theme.colors.accent} 
+                />
+                <Text style={[styles.editButtonText, { color: theme.colors.accent }]}>
+                  {isEditing ? 'Save' : 'Edit'}
+                </Text>
+              </TouchableOpacity>
             </View>
-            <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
+
+            <View style={styles.formContainer}>
+              {/* First Name */}
+              <View style={styles.formField}>
+                <Text style={[styles.fieldLabel, { color: theme.colors.textSecondary }]}>First Name</Text>
+                {isEditing ? (
+                  <TextInput
+                    style={[styles.input, { 
+                      backgroundColor: theme.colors.card, 
+                      borderColor: theme.colors.borderLight,
+                      color: theme.colors.textPrimary 
+                    }]}
+                    value={editedProfile.firstName}
+                    onChangeText={(text) => setEditedProfile({ ...editedProfile, firstName: text })}
+                    placeholder="Enter first name"
+                    placeholderTextColor={theme.colors.textMuted}
+                  />
+                ) : (
+                  <Text style={[styles.fieldValue, { color: theme.colors.textPrimary }]}>
+                    {profile.firstName || 'Not specified'}
+                  </Text>
+                )}
+              </View>
+
+              {/* Last Name */}
+              <View style={styles.formField}>
+                <Text style={[styles.fieldLabel, { color: theme.colors.textSecondary }]}>Last Name</Text>
+                {isEditing ? (
+                  <TextInput
+                    style={[styles.input, { 
+                      backgroundColor: theme.colors.card, 
+                      borderColor: theme.colors.borderLight,
+                      color: theme.colors.textPrimary 
+                    }]}
+                    value={editedProfile.lastName}
+                    onChangeText={(text) => setEditedProfile({ ...editedProfile, lastName: text })}
+                    placeholder="Enter last name"
+                    placeholderTextColor={theme.colors.textMuted}
+                  />
+                ) : (
+                  <Text style={[styles.fieldValue, { color: theme.colors.textPrimary }]}>
+                    {profile.lastName || 'Not specified'}
+                  </Text>
+                )}
+              </View>
+
+              {/* Email (Read-only) */}
+              <View style={styles.formField}>
+                <Text style={[styles.fieldLabel, { color: theme.colors.textSecondary }]}>Email</Text>
+                <Text style={[styles.fieldValue, { color: theme.colors.textPrimary }]}>
+                  {profile.email}
+                </Text>
+              </View>
+
+              {/* Phone Number */}
+              <View style={styles.formField}>
+                <Text style={[styles.fieldLabel, { color: theme.colors.textSecondary }]}>Phone Number</Text>
+                {isEditing ? (
+                  <View style={styles.phoneInputContainer}>
+                    <TextInput
+                      style={[styles.countryCodeInput, { 
+                        backgroundColor: theme.colors.card, 
+                        borderColor: theme.colors.borderLight,
+                        color: theme.colors.textPrimary 
+                      }]}
+                      value={editedProfile.countryCode}
+                      onChangeText={(text) => setEditedProfile({ ...editedProfile, countryCode: text })}
+                      placeholder="+7"
+                      placeholderTextColor={theme.colors.textMuted}
+                    />
+                    <TextInput
+                      style={[styles.phoneInput, { 
+                        backgroundColor: theme.colors.card, 
+                        borderColor: theme.colors.borderLight,
+                        color: theme.colors.textPrimary 
+                      }]}
+                      value={editedProfile.phoneNumber}
+                      onChangeText={(text) => setEditedProfile({ ...editedProfile, phoneNumber: text })}
+                      placeholder="Enter phone number"
+                      placeholderTextColor={theme.colors.textMuted}
+                      keyboardType="phone-pad"
+                    />
+                  </View>
+                ) : (
+                  <Text style={[styles.fieldValue, { color: theme.colors.textPrimary }]}>
+                    {profile.phoneNumber ? `${profile.countryCode || ''} ${profile.phoneNumber}` : 'Not specified'}
+                  </Text>
+                )}
+              </View>
+
+              {/* Gender */}
+              <View style={styles.formField}>
+                <Text style={[styles.fieldLabel, { color: theme.colors.textSecondary }]}>Gender</Text>
+                {isEditing ? (
+                  <View style={styles.genderContainer}>
+                    {['Male', 'Female', 'Other'].map((gender) => (
+                      <TouchableOpacity
+                        key={gender}
+                        style={[
+                          styles.genderButton,
+                          { borderColor: theme.colors.borderLight },
+                          editedProfile.gender === gender && { 
+                            borderColor: theme.colors.accent, 
+                            backgroundColor: theme.colors.accentGlow 
+                          }
+                        ]}
+                        onPress={() => setEditedProfile({ ...editedProfile, gender })}
+                      >
+                        <Text style={[
+                          styles.genderButtonText,
+                          { color: theme.colors.textPrimary },
+                          editedProfile.gender === gender && { color: theme.colors.accent }
+                        ]}>
+                          {gender}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                ) : (
+                  <Text style={[styles.fieldValue, { color: theme.colors.textPrimary }]}>
+                    {profile.gender || 'Not specified'}
+                  </Text>
+                )}
+              </View>
+
+              {/* Registration Date */}
+              <View style={styles.formField}>
+                <Text style={[styles.fieldLabel, { color: theme.colors.textSecondary }]}>Member Since</Text>
+                <Text style={[styles.fieldValue, { color: theme.colors.textPrimary }]}>
+                  {profile.createdAt ? new Date(profile.createdAt).toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  }) : 'Not available'}
+                </Text>
+              </View>
+            </View>
+
+            {isEditing && (
+              <View style={styles.editActions}>
+                <TouchableOpacity
+                  onPress={handleCancelEdit}
+                  style={[styles.cancelButton, { borderColor: theme.colors.borderLight }]}
+                >
+                  <Text style={[styles.cancelButtonText, { color: theme.colors.textSecondary }]}>
+                    Cancel
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleSaveProfile}
+                  style={[styles.saveButton, { backgroundColor: theme.colors.accent }]}
+                >
+                  <Text style={styles.saveButtonText}>
+                    Save Changes
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        )}
+
+        {activeTab === 'orders' && (
+          <View style={[styles.contentCard, { borderColor: theme.colors.borderLight }]}>
+            <LinearGradient
+              colors={[theme.colors.glassMedium, theme.colors.glassLight]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.glassOverlay}
+            />
+            <Text style={[styles.cardTitle, { color: theme.colors.textPrimary }]}>
               My Orders
             </Text>
-          </View>
 
-          {isFetching ? (
-            <View style={{ gap: 12 }}>
-              <ShimmerLoader width="100%" height={120} />
-              <ShimmerLoader width="100%" height={120} />
-            </View>
-          ) : orders.length === 0 ? (
-            <View style={[styles.emptyCard, { borderColor: theme.colors.borderLight }]}>
-              <LinearGradient
-                colors={[theme.colors.glassLight, theme.colors.glass]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.glassOverlay}
-              />
-              <EmptyState 
-                icon="package" 
-                title="No orders yet" 
-                subtitle="Make your first order" 
-              />
-            </View>
-          ) : (
-            <View style={styles.ordersList}>
-              {orders.map((order, index) => (
-                <View 
-                  key={order.id} 
-                  style={[
-                    styles.orderCard, 
-                    { 
-                      borderColor: theme.colors.borderLight,
-                      marginBottom: index === orders.length - 1 ? 0 : 12,
-                    }
-                  ]}
-                >
-                  <LinearGradient
-                    colors={[theme.colors.glassMedium, theme.colors.glassLight]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.glassOverlay}
-                  />
-                  <View style={styles.orderHeader}>
-                    <View style={styles.orderIdContainer}>
-                      <View style={[styles.orderIconSmall, { backgroundColor: theme.colors.accentGlow }]}>
-                        <Feather name="file-text" size={16} color={theme.colors.accent} />
+            {ordersFetching ? (
+              <View style={{ gap: 12, marginTop: 16 }}>
+                <ShimmerLoader width="100%" height={120} />
+                <ShimmerLoader width="100%" height={120} />
+              </View>
+            ) : orders.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <EmptyState 
+                  icon="package" 
+                  title="No orders yet" 
+                  subtitle="Make your first order" 
+                />
+              </View>
+            ) : (
+              <View style={styles.ordersList}>
+                {orders.map((order, index) => (
+                  <View 
+                    key={order.id} 
+                    style={[
+                      styles.orderCard, 
+                      { 
+                        borderColor: theme.colors.borderLight,
+                        marginBottom: index === orders.length - 1 ? 0 : 12,
+                      }
+                    ]}
+                  >
+                    <LinearGradient
+                      colors={[theme.colors.glass, theme.colors.glassLight]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.glassOverlay}
+                    />
+                    <View style={styles.orderHeader}>
+                      <View style={styles.orderIdContainer}>
+                        <View style={[styles.orderIconSmall, { backgroundColor: theme.colors.accentGlow }]}>
+                          <Feather name="file-text" size={16} color={theme.colors.accent} />
+                        </View>
+                        <Text style={[styles.orderId, { color: theme.colors.textPrimary }]}>
+                          #{order.id.slice(0, 8).toUpperCase()}
+                        </Text>
                       </View>
-                      <Text style={[styles.orderId, { color: theme.colors.textPrimary }]}>
-                        #{order.id.slice(0, 8).toUpperCase()}
+                      <Text style={[styles.orderAmount, { color: theme.colors.accentLight }]}>
+                        {formatCurrency(order.totalAmount)}
                       </Text>
                     </View>
-                    <Text style={[styles.orderAmount, { color: theme.colors.accentLight }]}>
-                      {formatCurrency(order.totalAmount)}
-                    </Text>
-                  </View>
-                  
-                  <View style={styles.orderMeta}>
-                    <View style={styles.orderMetaItem}>
-                      <Feather name="calendar" size={12} color={theme.colors.textMuted} />
-                      <Text style={[styles.orderMetaText, { color: theme.colors.textSecondary }]}>
-                        {new Date(order.createdAt).toLocaleDateString('ru-RU')}
+                    
+                    <View style={styles.orderMeta}>
+                      <View style={styles.orderMetaItem}>
+                        <Feather name="calendar" size={12} color={theme.colors.textMuted} />
+                        <Text style={[styles.orderMetaText, { color: theme.colors.textSecondary }]}>
+                          {new Date(order.createdAt).toLocaleDateString('en-US')}
+                        </Text>
+                      </View>
+                      <View style={styles.orderMetaItem}>
+                        <Feather name="package" size={12} color={theme.colors.textMuted} />
+                        <Text style={[styles.orderMetaText, { color: theme.colors.textSecondary }]}>
+                          {order.items.length} items
+                        </Text>
+                      </View>
+                    </View>
+                    
+                    <View style={[styles.statusBadge, { backgroundColor: theme.colors.successGlass }]}>
+                      <View style={[styles.statusDot, { backgroundColor: theme.colors.success }]} />
+                      <Text style={[styles.statusText, { color: theme.colors.textPrimary }]}>
+                        {order.status}
                       </Text>
                     </View>
-                    <View style={styles.orderMetaItem}>
-                      <Feather name="package" size={12} color={theme.colors.textMuted} />
-                      <Text style={[styles.orderMetaText, { color: theme.colors.textSecondary }]}>
-                        {order.items.length} items
-                      </Text>
-                    </View>
                   </View>
-                  
-                  <View style={[styles.statusBadge, { backgroundColor: theme.colors.successGlass }]}>
-                    <View style={[styles.statusDot, { backgroundColor: theme.colors.success }]} />
-                    <Text style={[styles.statusText, { color: theme.colors.textPrimary }]}>
-                      {order.status}
-                    </Text>
-                  </View>
-                </View>
-              ))}
-            </View>
-          )}
-        </View>
+                ))}
+              </View>
+            )}
+          </View>
+        )}
 
-        {/* Logout Button */}
-        <View style={styles.logoutSection}>
-          <PrimaryButton 
-            variant="glass" 
-            label="Sign Out" 
-            onPress={signOut}
-            icon={<Feather name="log-out" size={18} color={theme.colors.textPrimary} />}
-          />
-        </View>
+        {activeTab === 'settings' && (
+          <View style={[styles.contentCard, { borderColor: theme.colors.borderLight }]}>
+            <LinearGradient
+              colors={[theme.colors.glassMedium, theme.colors.glassLight]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.glassOverlay}
+            />
+            <Text style={[styles.cardTitle, { color: theme.colors.textPrimary }]}>
+              Quick Actions
+            </Text>
+
+            <View style={styles.settingsContainer}>
+              <TouchableOpacity
+                style={[styles.settingItem, { borderColor: theme.colors.borderLight }]}
+                onPress={() => navigation.navigate('Cart')}
+              >
+                <View style={[styles.settingIcon, { backgroundColor: '#8B5CF633' }]}>
+                  <Feather name="shopping-cart" size={20} color="#8B5CF6" />
+                </View>
+                <View style={styles.settingContent}>
+                  <Text style={[styles.settingTitle, { color: theme.colors.textPrimary }]}>
+                    My Cart
+                  </Text>
+                  <Text style={[styles.settingSubtitle, { color: theme.colors.textSecondary }]}>
+                    View items in your cart
+                  </Text>
+                </View>
+                <Feather name="chevron-right" size={20} color={theme.colors.textMuted} />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.settingItem, { borderColor: theme.colors.borderLight }]}
+                onPress={() => navigation.navigate('Home')}
+              >
+                <View style={[styles.settingIcon, { backgroundColor: '#3B82F633' }]}>
+                  <Feather name="book-open" size={20} color="#3B82F6" />
+                </View>
+                <View style={styles.settingContent}>
+                  <Text style={[styles.settingTitle, { color: theme.colors.textPrimary }]}>
+                    Browse Books
+                  </Text>
+                  <Text style={[styles.settingSubtitle, { color: theme.colors.textSecondary }]}>
+                    Discover new books
+                  </Text>
+                </View>
+                <Feather name="chevron-right" size={20} color={theme.colors.textMuted} />
+              </TouchableOpacity>
+
+              {isAdmin && (
+                <TouchableOpacity
+                  style={[styles.settingItem, { borderColor: '#FFA50033' }]}
+                  onPress={() => {
+                    Alert.alert('Admin Panel', 'Admin panel is not available in mobile app yet.');
+                  }}
+                >
+                  <View style={[styles.settingIcon, { backgroundColor: '#FFA50033' }]}>
+                    <Feather name="shield" size={20} color="#FFA500" />
+                  </View>
+                  <View style={styles.settingContent}>
+                    <Text style={[styles.settingTitle, { color: '#FFA500' }]}>
+                      Admin Panel
+                    </Text>
+                    <Text style={[styles.settingSubtitle, { color: theme.colors.textSecondary }]}>
+                      Manage the platform
+                    </Text>
+                  </View>
+                  <Feather name="chevron-right" size={20} color="#FFA500" />
+                </TouchableOpacity>
+              )}
+
+              <TouchableOpacity
+                style={[styles.settingItem, { borderColor: '#EF444433' }]}
+                onPress={() => {
+                  Alert.alert(
+                    'Sign Out',
+                    'Are you sure you want to sign out?',
+                    [
+                      { text: 'Cancel', style: 'cancel' },
+                      { text: 'Sign Out', style: 'destructive', onPress: signOut }
+                    ]
+                  );
+                }}
+              >
+                <View style={[styles.settingIcon, { backgroundColor: '#EF444433' }]}>
+                  <Feather name="log-out" size={20} color="#EF4444" />
+                </View>
+                <View style={styles.settingContent}>
+                  <Text style={[styles.settingTitle, { color: '#EF4444' }]}>
+                    Sign Out
+                  </Text>
+                  <Text style={[styles.settingSubtitle, { color: theme.colors.textSecondary }]}>
+                    Log out of your account
+                  </Text>
+                </View>
+                <Feather name="chevron-right" size={20} color="#EF4444" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -345,27 +758,49 @@ const styles = StyleSheet.create({
     zIndex: 0,
   },
   avatarContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     borderWidth: 2.5,
-    overflow: 'hidden',
+    overflow: 'visible',
     shadowColor: '#34d399',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.4,
     shadowRadius: 8,
     elevation: 6,
+    position: 'relative',
   },
   avatarGradient: {
     width: '100%',
     height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: 36,
+    overflow: 'hidden',
   },
   avatarText: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: '900',
     color: '#0d1b2a',
+  },
+  adminBadgeContainer: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#FFA500',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#FFA500',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  adminBadge: {
+    fontSize: 16,
   },
   profileName: {
     fontSize: 20,
@@ -383,14 +818,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
-  phoneContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
+  roleContainer: {
+    marginTop: 4,
   },
-  profilePhone: {
-    fontSize: 14,
-    fontWeight: '500',
+  roleBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    fontSize: 11,
+    fontWeight: '700',
+    alignSelf: 'flex-start',
   },
   statsContainer: {
     flexDirection: 'row',
@@ -429,35 +866,157 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     zIndex: 1,
   },
-  ordersSection: {
-    gap: 12,
+  tabsContainer: {
+    flexDirection: 'row',
+    gap: 8,
   },
-  sectionHeader: {
+  tab: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-  },
-  sectionIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
     justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 14,
+    borderWidth: 1.5,
   },
-  sectionTitle: {
-    fontSize: 19,
-    fontWeight: '800',
-    letterSpacing: -0.3,
+  tabText: {
+    fontSize: 14,
+    fontWeight: '700',
   },
-  emptyCard: {
-    padding: 24,
-    borderRadius: 24,
-    borderWidth: 2,
+  contentCard: {
+    padding: 16,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 5,
     overflow: 'hidden',
     position: 'relative',
   },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+    zIndex: 1,
+  },
+  cardTitle: {
+    fontSize: 20,
+    fontWeight: '900',
+    letterSpacing: -0.4,
+    zIndex: 1,
+  },
+  editButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+  },
+  editButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  formContainer: {
+    gap: 16,
+    zIndex: 1,
+  },
+  formField: {
+    gap: 8,
+  },
+  fieldLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  fieldValue: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  input: {
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  phoneInputContainer: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  countryCodeInput: {
+    flex: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  phoneInput: {
+    flex: 3,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  genderContainer: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  genderButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    alignItems: 'center',
+  },
+  genderButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  editActions: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 20,
+    zIndex: 1,
+  },
+  cancelButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  saveButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 14,
+    alignItems: 'center',
+  },
+  saveButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0d1b2a',
+  },
+  emptyContainer: {
+    paddingVertical: 40,
+    zIndex: 1,
+  },
   ordersList: {
     gap: 0,
+    marginTop: 16,
+    zIndex: 1,
   },
   orderCard: {
     padding: 14,
@@ -533,7 +1092,36 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
   },
-  logoutSection: {
-    marginTop: 6,
+  settingsContainer: {
+    gap: 12,
+    marginTop: 16,
+    zIndex: 1,
+  },
+  settingItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 14,
+    borderRadius: 16,
+    borderWidth: 1.5,
+  },
+  settingIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  settingContent: {
+    flex: 1,
+    gap: 4,
+  },
+  settingTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  settingSubtitle: {
+    fontSize: 13,
+    fontWeight: '500',
   },
 });
